@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Spinning USM</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -110,7 +110,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:#1a2332;min-heig
 .ropt p{font-size:11px;color:var(--gm);}
 
 #app{min-height:100vh;}
-.ahdr{background:linear-gradient(90deg,#001e3c,#003366 55%,#002e5a);color:#fff;padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.3);}
+.ahdr{background:linear-gradient(90deg,#001e3c,#003366 55%,#002e5a);color:#fff;padding:0 16px;padding-top:env(safe-area-inset-top, 0px);height:calc(54px + env(safe-area-inset-top, 0px));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.3);}
 .hlogo{display:flex;align-items:center;gap:8px;}
 .lgsm{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 32%,#ffe27a,var(--gold) 55%,#9a5e00);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 0 2px rgba(245,166,35,.4);flex-shrink:0;}
 .hlogo span{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.5px;line-height:1.1;}
@@ -254,7 +254,45 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:#1a2332;min-heig
 .toast.e{background:var(--red);}
 .toast.w{background:var(--warn);}
 .hidden{display:none!important;}
-@media(max-width:480px){.pc{padding:0 12px 16px;}.ahdr{padding:0 12px;}}
+@media(max-width:480px){
+  .pc{padding:0 12px 16px;}
+  .ahdr{padding:0 12px;}
+  .stitle{font-size:18px;}
+  .ssub{font-size:11px;}
+  .cc{padding:12px;}
+  .cbig{font-size:22px;}
+  .ddot{width:36px;height:36px;}
+  .ddot .dn{font-size:15px;}
+}
+
+/* Soporte dinámico de Notch / Safe Areas para Apple y Android modernos */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+#splash {
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+.toast {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Vista en 2 columnas para Tablets y Escritorios (Ancho >= 600px) */
+@media(min-width:600px){
+  .pc.al-view {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 20px 18px;
+  }
+  /* Bloques que deben ocupar el 100% de la pantalla incluso en tablet */
+  .pc.al-view .fc, 
+  .pc.al-view .blkc, 
+  .pc.al-view .ibox, 
+  .pc.al-view .wbox {
+    grid-column: span 2;
+  }
+}
 
 /* Phone field */
 .phone-wrap{display:flex;gap:6px;align-items:stretch;}
@@ -947,6 +985,7 @@ function startTmr(){
 function set(id,txt){document.getElementById(id).textContent=txt;}
 
 function renderAlumno(){
+  document.getElementById("pc").classList.add("al-view");
   set("pg-title","📅 Clases Disponibles");
   set("pg-sub","Martes y Jueves · 12:30 hrs · Bloque 7-8");
   var em=CU.email,blq=iBl(em),falt=gF(em);
@@ -1019,6 +1058,7 @@ function doCancel(id){
 
 var ATAB="clases";
 function renderAdmin(tab){
+  document.getElementById("pc").classList.remove("al-view");
   if(tab)ATAB=tab;
   set("pg-title","🛡️ Panel de Control");
   set("pg-sub","Pure Endurance — Spinning USM");
