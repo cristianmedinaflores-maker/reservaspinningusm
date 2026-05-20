@@ -1,0 +1,24 @@
+{
+  "short_name": "Spinning USM",
+  "name": "Spinning USM - Reservas",
+  "description": "Sistema de Reservas para el Taller de Spinning USM - Pure Endurance",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#060b14",
+  "theme_color": "#003366",
+  "display": "standalone",
+  "orientation": "portrait"
+}
