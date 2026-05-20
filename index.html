@@ -619,7 +619,7 @@ function validatePhone(pfx){
 function getFullPhone(pfx){
   var inp=document.getElementById(pfx==="r"?"rtel":"stel");
   if(!inp)return "";
-  return "+56"+inp.value.replace(/\D/g,"");
+  return inp.value.replace(/\D/g,"");
 }
 function isPhoneValid(pfx){
   var inp=document.getElementById(pfx==="r"?"rtel":"stel");
@@ -1106,7 +1106,8 @@ function rAdmC(){
     h+="<button class='cbtn' data-cid='"+c.id+"' onclick='chgEsp(this.dataset.cid,1)' "+(cEsp>=ME||tot>=MB?"disabled":"")+">+</button></div></div>";
     if(tot===0){h+="<p style='text-align:center;color:var(--gm);font-size:12px;padding:12px'>Sin inscripciones esta semana</p>";}
     else{
-      ins.forEach(function(em){
+      var sortedIns=ins.slice().sort(function(e1,e2){var a1=D.alum.find(function(a){return a.email===e1;}),a2=D.alum.find(function(a){return a.email===e2;});if(!a1||!a2)return 0;return apellido(a1.nombre).localeCompare(apellido(a2.nombre),"es");});
+      sortedIns.forEach(function(em){
         var al=D.alum.find(function(a){return a.email===em;});if(!al)return;
         h+=aRH(ini(al.nombre),nameWithBday(al.nombre,al.fechaNac),em,gF(em),asD[em],c.id,false);
       });
@@ -1135,7 +1136,7 @@ function rAdmA(){
   var h="<div class='ab'><div class='abh'><div><div class='abt'>👥 Alumnos Registrados</div><div class='abm'>"+D.alum.length+" alumno(s)</div></div>";
   h+="<button class='bexp' style='width:auto;padding:6px 11px;margin:0;font-size:11px' onclick='showEAll()'>📊 Ver y Exportar</button></div>";
   if(!D.alum.length)h+="<p style='text-align:center;color:var(--gm);font-size:12px;padding:14px'>Sin alumnos</p>";
-  else D.alum.forEach(function(a){
+  else D.alum.slice().sort(function(a,b){return apellido(a.nombre).localeCompare(apellido(b.nombre),"es");}).forEach(function(a){
     var in2=ini(a.nombre),blq=iBl(a.email),f=gF(a.email);
     h+="<div class='mr'><div class='av'>"+in2+"</div>";
     h+="<div class='ai' style='flex:1'><div class='an'>"+a.nombre+(blq?" <span style='background:#ffebee;color:#c62828;font-size:9px;padding:1px 5px;border-radius:50px'>BLOQ</span>":"")+"</div>";
@@ -1277,22 +1278,22 @@ function showEP(claseId){
   ins.forEach(function(em){var al=D.alum.find(function(a){return a.email===em;});if(!al)return;rows.push({nombre:al.nombre,rut:al.rut,email:em,estado:asD[em]==="p"?"Presente":asD[em]==="a"?"Ausente":"Pendiente",tipo:"Normal",falt:gF(em)});});
   esps.forEach(function(e){var al=D.alum.find(function(a){return a.email===e.email;});rows.push({nombre:e.nombre,rut:al?al.rut:"-",email:e.email,estado:asD[e.email]==="p"?"Presente":asD[e.email]==="a"?"Ausente":"Pendiente",tipo:"Especial",falt:gF(e.email)});});
   rows=sortByApellido(rows);
-  buildEM(c.dia+" 12:30",rows,function(){expE(claseId);});
+  buildEM(c.dia+" 12:30",rows,"expE(\x27"+claseId+"\x27)");
 }
 function showEAll(){
   var rows=D.alum.map(function(a){var blq=iBl(a.email);return{nombre:a.nombre,rut:a.rut,email:a.email,estado:blq?"Bloqueado":"Activo",tipo:"",falt:gF(a.email)};});
   rows=sortByApellido(rows);
-  buildEM("Todos los Alumnos",rows,function(){expAll();});
+  buildEM("Todos los Alumnos",rows,"expAll()");
 }
-function buildEM(titulo,rows,dlFn){
+function buildEM(titulo,rows,dlAction){
   set("expt","📊 Vista Previa — "+titulo);
-  var aE=D.adm.email,aT=D.adm.tel?"56"+D.adm.tel.replace(/\s/g,""):null;
+  var aE=D.adm.email,rawT=D.adm.tel?(D.adm.tel.replace(/^\+56/,"").replace(/\D/g,"")):"",aT=rawT?"56"+rawT:null;
   var wM=encodeURIComponent("Lista Spinning USM — "+titulo);
   var tbl="<div style='overflow-x:auto;margin-bottom:12px'><table class='etbl'><thead><tr><th>Nombre</th><th>RUT</th><th>Correo</th><th>Estado</th><th>Faltas</th></tr></thead><tbody>";
   if(!rows.length)tbl+="<tr><td colspan='5' style='text-align:center;color:var(--gm);padding:14px'>Sin datos</td></tr>";
   else rows.forEach(function(r){tbl+="<tr><td>"+r.nombre+"</td><td>"+r.rut+"</td><td>"+r.email+"</td><td>"+r.estado+(r.tipo==="Especial"?" 🎟️":"")+"</td><td>"+(r.falt>0?"⚠️ "+r.falt:"—")+"</td></tr>";});
   tbl+="</tbody></table></div>";
-  var btns="<div class='sbtns'><button class='sb2 sbdl' onclick='("+dlFn.toString()+")();closeExp()'>📥 Descargar Excel</button>";
+  var btns="<div class='sbtns'><button class='sb2 sbdl' onclick='"+dlAction+";closeExp()'>📥 Descargar CSV</button>";
   btns+="<button class='sb2 sbem' onclick=\"window.open('mailto:"+aE+"?subject=Lista+Spinning+"+encodeURIComponent(titulo)+"','_blank');toast('Abriendo correo…','s')\">📧 Enviar correo</button>";
   if(aT)btns+="<button class='sb2 sbwa' onclick=\"window.open('https://wa.me/"+aT+"?text="+wM+"','_blank');toast('Abriendo WhatsApp…','s')\">💬 WhatsApp</button>";
   btns+="</div>";
@@ -1314,13 +1315,16 @@ function expE(id){
 }
 function expAll(){
   var csv="Nombre,RUT,Correo,Teléfono,Fecha Nac,Faltas,Estado\n";
-  D.alum.forEach(function(a){var blq=iBl(a.email),f=gF(a.email);csv+='"'+a.nombre+'","'+a.rut+'","'+a.email+'","+56 9'+(a.tel||'')+'","'+(a.fechaNac||'')+'","'+f+'","'+(blq?"Bloq hasta "+new Date(blq.hasta).toLocaleDateString("es-CL"):"Activo")+'"\n';});
+  var sorted=D.alum.slice().sort(function(a,b){return apellido(a.nombre).localeCompare(apellido(b.nombre),"es");});
+  sorted.forEach(function(a){var blq=iBl(a.email),f=gF(a.email),rawTel=(a.tel||"").replace(/^\+56/,"").replace(/\D/g,"");csv+='"'+a.nombre+'","'+a.rut+'","'+a.email+'","+56 '+rawTel+'","'+(a.fechaNac||'')+'","'+f+'","'+(blq?"Bloq hasta "+new Date(blq.hasta).toLocaleDateString("es-CL"):"Activo")+'"\n';});
   dlCSV(csv,"alumnos_"+new Date().toISOString().slice(0,10)+".csv");
 }
 function dlCSV(content,fn){
   var blob=new Blob(["\uFEFF"+content],{type:"text/csv;charset=utf-8;"});
   var url=URL.createObjectURL(blob),a=document.createElement("a");
-  a.href=url;a.download=fn;a.click();URL.revokeObjectURL(url);
+  a.href=url;a.download=fn;a.style.display="none";
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},200);
 }
 
 function openSettings(){
@@ -1337,7 +1341,7 @@ function openSettings(){
   var h="<div class='fg'><label>Nombre Completo</label><input type='text' id='snm' value='"+u.nombre+"'/></div>";
   if(!ISADM)h+="<div class='fg'><label>RUT</label><input type='text' id='srt' value='"+(u.rut||"")+"'/></div>";
   h+="<div class='fg'><label>Fecha de Nacimiento</label><input type='date' id='sfd' value='"+(u.fechaNac||"")+"'/></div>";
-  var telNum=u.tel?u.tel.replace("+56",""):"";
+  var telNum=u.tel?u.tel.replace(/^\+56/,"").replace(/\D/g,""):"";
   h+="<div class='fg'><label>Teléfono WhatsApp 🇨🇱 <span style='color:var(--gm);font-weight:400;font-size:10px'>(recuperación de contraseña)</span></label>";
   h+="<div style='display:flex;gap:6px;align-items:center'><span style='background:#e8f4fd;border:1.5px solid var(--bdr);border-radius:6px;padding:10px 11px;font-size:13px;color:var(--navy);font-weight:700;white-space:nowrap;flex-shrink:0'>🇨🇱 +56</span>";
   h+="<input type='tel' id='stel' value='"+telNum+"' placeholder='912345678' maxlength='9' oninput='validatePhone(\"s\")' style='flex:1'/></div>";
@@ -1361,7 +1365,7 @@ function saveSet(){
   var u=ISADM?D.adm:CU,pfx=ISADM?"adm":"al";
   var nm=document.getElementById("snm").value.trim();
   var fd=document.getElementById("sfd").value;
-  var stelEl=document.getElementById("stel");var tel=stelEl?"+56"+stelEl.value.replace(/\D/g,""):"";
+  var stelEl=document.getElementById("stel");var tel=stelEl?stelEl.value.replace(/\D/g,""):"";
   var cp=document.getElementById("scp").value;
   var np=document.getElementById("snp-"+pfx).value;
   var np2=document.getElementById("snp2-"+pfx).value;

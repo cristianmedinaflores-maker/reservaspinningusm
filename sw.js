@@ -1,4 +1,4 @@
-const CACHE_NAME = "spinning-usm-cache-v3";
+const CACHE_NAME = "spinning-usm-cache-v4";
 const ASSETS = [
   "./",
   "./index.html",
