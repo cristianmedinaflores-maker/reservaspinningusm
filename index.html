@@ -1278,7 +1278,7 @@ function showEP(claseId){
   ins.forEach(function(em){var al=D.alum.find(function(a){return a.email===em;});if(!al)return;rows.push({nombre:al.nombre,rut:al.rut,email:em,estado:asD[em]==="p"?"Presente":asD[em]==="a"?"Ausente":"Pendiente",tipo:"Normal",falt:gF(em)});});
   esps.forEach(function(e){var al=D.alum.find(function(a){return a.email===e.email;});rows.push({nombre:e.nombre,rut:al?al.rut:"-",email:e.email,estado:asD[e.email]==="p"?"Presente":asD[e.email]==="a"?"Ausente":"Pendiente",tipo:"Especial",falt:gF(e.email)});});
   rows=sortByApellido(rows);
-  buildEM(c.dia+" 12:30",rows,"expE(\x27"+claseId+"\x27)");
+  buildEM(c.dia+" 12:30",rows,"expE(&quot;"+claseId+"&quot;)");
 }
 function showEAll(){
   var rows=D.alum.map(function(a){var blq=iBl(a.email);return{nombre:a.nombre,rut:a.rut,email:a.email,estado:blq?"Bloqueado":"Activo",tipo:"",falt:gF(a.email)};});
