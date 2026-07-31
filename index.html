@@ -1579,6 +1579,7 @@ var ATAB="clases";
 function renderAdmin(tab){
   document.getElementById("pc").classList.remove("al-view");
   if(tab)ATAB=tab;
+  limpiaAsiHuerfanas();   // suelta marcas de quien ya no está inscrito
   set("pg-title","🛡️ Panel de Control");
   set("pg-sub","Pure Endurance — Spinning USM");
   // Los totales ya no pueden asumir martes y jueves: las clases son configurables.
@@ -1649,8 +1650,8 @@ function aRH(in2,nom,em,f,est,cid,isEsp){
   h+="<div class='ai'><div class='an'><span class='nm'>"+nom+"</span>"+(_r==="func"?"<span class='rol-tag func'>PROF/FUNC</span>":"")+(isEsp?" <span class='rol-tag func'>ESP</span>":"")+"</div>";
   h+="<div class='as'>"+em+(f>0?" · ⚠️ "+f+" falta(s)":"")+"</div></div>";
   h+="<div class='abts'>";
-  h+="<button class='bp"+(est==="p"?" on":"")+"' data-cid='"+cid+"' data-em='"+em+"' onclick='markA(this.dataset.cid,this.dataset.em,\"p\")'>✓</button>";
-  h+="<button class='ba"+(est==="a"?" on":"")+"' data-cid='"+cid+"' data-em='"+em+"' onclick='markA(this.dataset.cid,this.dataset.em,\"a\")'>✗</button>";
+  h+="<button class='bp"+(est==="p"?" on":"")+"' data-cid='"+cid+"' data-em='"+em+"' title='Marcar presente (toca otra vez para deshacer)' onclick='markA(this.dataset.cid,this.dataset.em,\"p\")'>✓</button>";
+  h+="<button class='ba"+(est==="a"?" on":"")+"' data-cid='"+cid+"' data-em='"+em+"' title='Marcar ausente (toca otra vez para deshacer)' onclick='markA(this.dataset.cid,this.dataset.em,\"a\")'>✗</button>";
   if(isEsp)h+="<button class='bsd' data-cid='"+cid+"' data-em='"+em+"' onclick='rmEsp(this.dataset.cid,this.dataset.em)'>✕</button>";
   h+="</div></div>";
   return h;
@@ -1829,10 +1830,41 @@ function chgEsp(id,delta){
   if(delta<0&&(D.esp[k]||[]).length>nv){toast("Elimina primero el alumno especial asignado (✕)","e");return;}
   D.cEsp[k]=nv;sv();toast(nv>act?"🎟️ Cupo habilitado":"🎟️ Cupo removido","s");renderAdmin("clases");
 }
+// Limpia marcas de asistencia de gente que YA NO está inscrita en esa fecha.
+// Sin esto, quien era marcado y después cancelaba dejaba la marca colgada, y al
+// volver a reservar reaparecía como presente sin que nadie lo marcara.
+// Solo toca las fechas vigentes: las clases pasadas son historial y no se tocan.
+function limpiaAsiHuerfanas(){
+  if(!ISADM||!D.asi)return;
+  var ch=false;
+  CL.forEach(function(c){
+    var k=rk(c.id),asK=k+"_a",m=D.asi[asK];
+    if(!m||typeof m!=="object")return;
+    var vivos=(D.res[k]||[]).concat((D.esp[k]||[]).map(function(e){return e.email;}));
+    Object.keys(m).forEach(function(em){
+      if(vivos.indexOf(em)<0){delete m[em];ch=true;}
+    });
+    if(!Object.keys(m).length)delete D.asi[asK];
+  });
+  if(ch)sv();
+}
+// Tocar el mismo botón otra vez deshace la marca y la deja en "pendiente".
+// Antes no había forma de volver atrás: una vez marcado, solo se podía alternar
+// entre presente y ausente.
 function markA(cid,em,est){
   var k=rk(cid),asK=k+"_a";
   if(!D.asi[asK])D.asi[asK]={};
-  var prev=D.asi[asK][em];D.asi[asK][em]=est;
+  var prev=D.asi[asK][em];
+  if(prev===est){
+    delete D.asi[asK][em];
+    if(est==="a"){                                   // se revierte la falta que había sumado
+      D.fal[em]=Math.max(0,(D.fal[em]||0)-1);
+      if(D.blq[em]&&D.fal[em]<MF)delete D.blq[em];
+    }
+    if(!Object.keys(D.asi[asK]).length)delete D.asi[asK];
+    sv();toast("Marca borrada — queda pendiente","w");renderAdmin("clases");return;
+  }
+  D.asi[asK][em]=est;
   if(est==="a"&&prev!=="a"){
     D.fal[em]=(D.fal[em]||0)+1;
     if(D.fal[em]>=MF){var hd=new Date();hd.setDate(hd.getDate()+BD);D.blq[em]={hasta:hd.toISOString()};toast("⚠️ 3 faltas — "+em+" bloqueado","w");
@@ -1872,6 +1904,7 @@ function doElim(em){
     Object.keys(D.res).forEach(function(k){D.res[k]=D.res[k].filter(function(e){return e!==em;});});
     Object.keys(D.esp).forEach(function(k){D.esp[k]=D.esp[k].filter(function(e){return e.email!==em;});});
     delete D.fal[em];delete D.blq[em];
+    Object.keys(D.asi).forEach(function(x){if(D.asi[x]&&typeof D.asi[x]==="object")delete D.asi[x][em];});
     alumRemove(em);
     resTx(function(res){Object.keys(res).forEach(function(k){res[k]=res[k].filter(function(e){return e!==em;});});return res;}).catch(function(){});
     sv();toast("Eliminado","w");renderAdmin("alumnos");
