@@ -329,10 +329,18 @@ button{font-family:'Nunito',sans-serif;}
 .bp,.ba{width:var(--tap);height:var(--tap);border-radius:var(--r-sm);font-size:var(--fs-lg);
   font-weight:700;cursor:pointer;background:#fff;font-family:'Nunito',sans-serif;
   transition:all .18s;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.bp{border:1px solid var(--gl);color:var(--gl-tx);}
-.bp.on,.bp:hover{background:var(--gl);color:#fff;border-color:var(--gl);}
-.ba{border:1px solid #ef9a9a;color:var(--red);}
-.ba.on,.ba:hover{background:var(--red);color:#fff;border-color:var(--red);}
+/* Sin marcar = NEUTRO. Antes el ✓ estaba en verde por defecto y, al agrandar el botón
+   a 44px, se leía como "ya marcado como presente" aunque nadie lo hubiera tocado.
+   El color ahora significa una sola cosa: asistencia registrada. */
+.bp,.ba{border:1px solid var(--bdr-fuerte);color:var(--gm);}
+.bp.on{background:var(--gl);color:#fff;border-color:var(--gl);}
+.ba.on{background:var(--red);color:#fff;border-color:var(--red);}
+/* La pista de color solo en dispositivos con puntero: en táctil el :hover se queda
+   pegado después de tocar y volvería a confundir. */
+@media (hover:hover){
+  .bp:hover{border-color:var(--gl);color:var(--gl-tx);background:#f0fdf4;}
+  .ba:hover{border-color:var(--red);color:var(--red);background:#fef2f2;}
+}
 .bexp{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:44px;
   padding:11px var(--s4);background:linear-gradient(135deg,#1b5e20,#2e7d32);color:#fff;border:none;
   border-radius:var(--r-sm);font-family:'Nunito',sans-serif;font-size:var(--fs-sm);font-weight:700;
