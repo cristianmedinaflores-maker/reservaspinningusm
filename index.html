@@ -50,8 +50,12 @@
   --hdr:60px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
+html{overflow-x:hidden;}
 body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;
-  -webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-font-smoothing:antialiased;line-height:1.45;}
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;-webkit-font-smoothing:antialiased;line-height:1.45;
+  overflow-x:hidden;max-width:100%;overscroll-behavior-x:none;}
+/* Nada puede ser más ancho que la pantalla */
+img,table,pre{max-width:100%;}
 /* Campos de texto a 16px mínimo: evita el auto-zoom de iOS/Android al enfocar. */
 input[type=text],input[type=email],input[type=password],input[type=tel],input[type=number],input[type=date],input[type=search],textarea{font-size:var(--fs-lg);}
 /* Foco visible en todo lo interactivo: antes no existía y era imposible navegar con teclado. */
@@ -107,7 +111,7 @@ button{font-family:'Nunito',sans-serif;}
 
 /* ── TARJETA DE ACCESO ──────────────────────────────────────────────────── */
 .acard{background:#fff;border-radius:var(--r-lg);padding:var(--s6);width:100%;max-width:410px;
-  box-shadow:var(--sh-3);max-height:92vh;overflow-y:auto;position:relative;z-index:1;}
+  box-shadow:var(--sh-3);max-height:92vh;overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;}
 .acard h2{font-family:'Oswald',sans-serif;font-size:var(--fs-xl);color:var(--navy);
   margin-bottom:var(--s1);letter-spacing:.3px;}
 .acard .sub{color:var(--gm);font-size:var(--fs-sm);margin-bottom:var(--s5);}
@@ -216,8 +220,15 @@ button{font-family:'Nunito',sans-serif;}
 .ddot{width:46px;height:46px;border-radius:var(--r-md);display:flex;flex-direction:column;
   align-items:center;justify-content:center;font-size:var(--fs-2xs);font-weight:700;
   text-transform:uppercase;flex-shrink:0;}
-.ddot.martes{background:linear-gradient(135deg,#e3f2fd,#bbdefb);color:var(--info);}
-.ddot.jueves{background:linear-gradient(135deg,#fff8e1,#ffecb3);color:#b45309;}
+/* Un color por día de la semana: antes dependía del id y las clases nuevas quedaban sin color */
+.ddot{background:linear-gradient(135deg,#eef2f7,#dfe6ef);color:var(--gt);}
+.ddot.d0{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#9d174d;}
+.ddot.d1{background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#5b21b6;}
+.ddot.d2{background:linear-gradient(135deg,#e3f2fd,#bbdefb);color:var(--info);}
+.ddot.d3{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#166534;}
+.ddot.d4{background:linear-gradient(135deg,#fff8e1,#ffecb3);color:#b45309;}
+.ddot.d5{background:linear-gradient(135deg,#ffedd5,#fed7aa);color:#9a3412;}
+.ddot.d6{background:linear-gradient(135deg,#cffafe,#a5f3fc);color:#155e75;}
 .ddot .dn{font-family:'Oswald',sans-serif;font-size:var(--fs-lg);line-height:1;}
 .ci{min-width:0;}
 .ci h3{font-family:'Oswald',sans-serif;font-size:var(--fs-xl);color:var(--navy);line-height:1.15;}
@@ -378,7 +389,7 @@ button{font-family:'Nunito',sans-serif;}
 .ov{position:fixed;inset:0;background:rgba(10,20,35,.6);z-index:200;display:flex;
   align-items:center;justify-content:center;padding:var(--s4);backdrop-filter:blur(3px);}
 .modal{background:#fff;border-radius:var(--r-lg);padding:var(--s6);width:100%;max-width:420px;
-  box-shadow:var(--sh-3);max-height:92vh;overflow-y:auto;}
+  box-shadow:var(--sh-3);max-height:92vh;overflow-y:auto;overflow-x:hidden;}
 .modal h3{font-family:'Oswald',sans-serif;font-size:var(--fs-xl);color:var(--navy);margin-bottom:6px;}
 .modal p{color:var(--gt);font-size:var(--fs-md);margin-bottom:var(--s5);line-height:1.55;}
 .mbtns{display:flex;gap:var(--s2);}
@@ -445,10 +456,10 @@ body{padding-bottom:env(safe-area-inset-bottom,0px);}
 
 /* ── SELECTOR DE ROL EN EL REGISTRO ─────────────────────────────────────── */
 .rol-sel{display:flex;gap:var(--s2);}
-.rol-opt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+.rol-opt{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:var(--s1);min-height:76px;padding:var(--s3) var(--s2);border:1px solid var(--bdr-fuerte);
   border-radius:var(--r-md);cursor:pointer;transition:all .18s;background:#fff;text-align:center;}
-.rol-opt input{position:absolute;opacity:0;pointer-events:none;}
+.rol-opt input{position:absolute;top:0;left:0;width:1px;height:1px;min-height:0;padding:0;margin:0;opacity:0;pointer-events:none;}
 .rol-opt .rol-ic{font-size:var(--fs-2xl);line-height:1;}
 .rol-opt .rol-tx{font-size:var(--fs-sm);font-weight:700;color:var(--gt);line-height:1.25;}
 .rol-opt:hover{border-color:var(--navy);background:#f5f8ff;}
@@ -517,7 +528,7 @@ body{padding-bottom:env(safe-area-inset-bottom,0px);}
 .notif-clr{font-family:'Nunito',sans-serif;font-size:var(--fs-sm);font-weight:700;color:var(--red);
   cursor:pointer;padding:6px var(--s2);border-radius:var(--r-sm);}
 .notif-clr:hover{background:#fef2f2;}
-#notif-list{max-height:calc(70vh - 56px);overflow-y:auto;}
+#notif-list{max-height:calc(70vh - 56px);overflow-y:auto;overflow-x:hidden;}
 .notif-item{display:flex;gap:var(--s3);padding:var(--s3) var(--s4);border-bottom:1px solid #eef2f7;
   align-items:flex-start;}
 .notif-item:last-child{border-bottom:none;}
@@ -850,7 +861,7 @@ var D={
     preguntas:[{p:PQL[0],r:'firulais'},{p:PQL[1],r:'valparaiso'},{p:PQL[5],r:'henriquez'}]},
   alum:[],res:{},asi:{},
   fal:{},blq:{},
-  cEsp:{martes:0,jueves:0},
+  cEsp:{},   // por fecha de clase (rk), no por día de la semana
   esp:{martes:[],jueves:[]},
   emg:{activa:false},
   notif:[],
@@ -1037,6 +1048,28 @@ function migrateResKeys(){
   resTx(function(){return copia;}).catch(function(e){console.warn("migrateResKeys",e);});
   sv(); // asi viaja en el guardado masivo
 }
+// Los cupos especiales se guardaban por día de la semana (cEsp["martes"]), así que la
+// bicicleta reservada y el alumno asignado quedaban tomados TODAS las semanas y nunca se
+// liberaban al pasar la clase. Ahora van por fecha, igual que las reservas. Esta migración
+// traspasa lo que ya existe solo si la clase de esta semana todavía no ocurre; si ya pasó,
+// se descarta (que es justamente el comportamiento que faltaba).
+function migrateEspKeys(){
+  if(!ISADM)return;
+  if(!D.cEsp)D.cEsp={};if(!D.esp)D.esp={};
+  var changed=false;
+  CL.forEach(function(c){
+    var vigente=(mondayOf(claseDateObj(c.cD))===wk()),newK=rk(c.id);
+    if(typeof D.cEsp[c.id]==="number"){                       // clave vieja = solo el id
+      if(vigente&&!D.cEsp[newK])D.cEsp[newK]=D.cEsp[c.id];
+      delete D.cEsp[c.id];changed=true;
+    }
+    if(Array.isArray(D.esp[c.id])){
+      if(vigente&&!(D.esp[newK]&&D.esp[newK].length))D.esp[newK]=D.esp[c.id].slice();
+      delete D.esp[c.id];changed=true;
+    }
+  });
+  if(changed)sv();
+}
 // El formato viejo guardaba true (suspendida para siempre). Se interpreta como
 // "suspendida la fecha en curso" y el admin la convierte a fecha al entrar, una sola vez.
 function normalizeEmg(){
@@ -1083,7 +1116,7 @@ var CL=CLDEF.slice();
 function normClase(c){
   var dias=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
   var cD=(typeof c.cD==="number")?c.cD:2;
-  return {id:c.id,dia:c.dia||dias[cD],sh:c.sh||(c.dia||dias[cD]).substring(0,3).toUpperCase(),
+  return {id:c.id,dia:c.dia||dias[cD],sh:shDe(cD),
           cD:cD,cH:(typeof c.cH==="number")?c.cH:12.5,
           aD:(typeof c.aD==="number")?c.aD:(cD+6)%7,aH:(typeof c.aH==="number")?c.aH:19,
           bicis:(typeof c.bicis==="number"&&c.bicis>0)?c.bicis:16,
@@ -1094,6 +1127,9 @@ function syncCL(){
   var src=(D.clases&&D.clases.length)?D.clases:CLDEF;
   CL=src.map(normClase).sort(function(a,b){return (a.cD-b.cD)||(a.cH-b.cH);});
 }
+// Etiqueta corta del recuadro (MAR, JUE, LUN...). Se genera sola desde el día:
+// el profesor ya no tiene que escribirla al crear una clase.
+function shDe(cD){var d=["DOM","LUN","MAR","MIE","JUE","VIE","SAB"];return d[cD]||"CLA";}
 function claseById(id){return CL.find(function(x){return x.id===id;});}
 function bicisDe(id){var c=claseById(id);return c?c.bicis:16;}
 // Hora decimal (12.5) → "12:30"
@@ -1144,10 +1180,10 @@ function nextO(c){
   if(hh<48)return "Reservas abren en "+hh+"h "+mm+"min";
   return "Reservas abren el "+days[c.aD]+" a las "+c.aH+":00 hrs";
 }
-function cuD(id){return bicisDe(id)-(D.cEsp[id]||0)-(D.res[rk(id)]||[]).length;}
-function totI(id){return (D.res[rk(id)]||[]).length+(D.esp[id]||[]).length;}
+function cuD(id){var k=rk(id);return bicisDe(id)-(D.cEsp[k]||0)-(D.res[k]||[]).length;}
+function totI(id){var k=rk(id);return (D.res[k]||[]).length+(D.esp[k]||[]).length;}
 function hasR(em,id){return (D.res[rk(id)]||[]).indexOf(em)>=0;}
-function isE(em,id){return (D.esp[id]||[]).some(function(e){return e.email===em;});}
+function isE(em,id){return (D.esp[rk(id)]||[]).some(function(e){return e.email===em;});}
 function iBl(em){
   var b=D.blq[em];if(!b)return null;
   if(new Date()<new Date(b.hasta))return b;
@@ -1398,7 +1434,7 @@ function enterApp(){
   var _bw=document.getElementById("bell-wrap");
   if(_bw)_bw.style.display=ISADM?"inline-flex":"none";
   var _np=document.getElementById("notif-panel");if(_np)_np.classList.remove("open");
-  if(ISADM){updateBell();normalizeEmg();migrateResKeys();}
+  if(ISADM){updateBell();normalizeEmg();migrateResKeys();migrateEspKeys();}
   updateEmgBanner();
   if(ISADM)renderAdmin();else renderAlumno();
   if(CU.fechaNac&&isBirthday(CU.fechaNac)){
@@ -1420,8 +1456,12 @@ function set(id,txt){document.getElementById(id).textContent=txt;}
 function renderAlumno(){
   document.getElementById("pc").classList.add("al-view");
   set("pg-title","📅 Clases Disponibles");
-  set("pg-sub",CL.length?CL.map(claseTitulo).join(" · "):"Sin clases configuradas");
   var em=CU.email,blq=iBl(em),falt=gF(em),miRol=rolDe(CU);
+  // Cada rol ve SOLO las clases que tiene autorizadas. Excepción: si ya está inscrito
+  // en una clase que después se restringió a otro rol, se le sigue mostrando; si no,
+  // no tendría cómo enterarse ni cancelar.
+  var MIS=CL.filter(function(c){return rolPuede(c,miRol)||hasR(em,c.id)||isE(em,c.id);});
+  set("pg-sub",MIS.length?MIS.map(claseTitulo).join(" · "):rolLabel(miRol));
   var h="";
   if(blq){
     var d=new Date(blq.hasta).toLocaleDateString("es-CL",{day:"numeric",month:"long"});
@@ -1433,8 +1473,8 @@ function renderAlumno(){
   var nameTag=CU.nombre.split(" ")[0]+(bdayE?" "+bdayE:"");
   h+="<div class='fc "+fc+"'><div class='fnum'>"+falt+"</div><div class='fi'><h4>Hola, "+nameTag+" 👋</h4><p>"+fm+"</p></div></div>";
 
-  CL.forEach(function(c){
-    var act=isAct(c),cd=cuD(c.id),ti=totI(c.id),cen=D.cEsp[c.id]||0;
+  MIS.forEach(function(c){
+    var act=isAct(c),cd=cuD(c.id),ti=totI(c.id),cen=D.cEsp[rk(c.id)]||0;
     var pct=Math.min(100,Math.round(ti/c.bicis*100));
     var cc=cd<=3&&cd>0?"low":cd<=0?"full":"";
     var emgA=isClaseSusp(c.id),res=hasR(em,c.id),esp=isE(em,c.id);
@@ -1442,7 +1482,8 @@ function renderAlumno(){
     var action="";
     if(emgA) action="<div class='sbg sb-em'>🚨 Clase suspendida</div>";
     else if(blq) action="<div class='sbg sb-lk'>🚫 Acceso suspendido</div>";
-    // Clase reservada para otro rol: se muestra igual (para que vea el horario) pero sin botón.
+    // Solo puede pasar si ya estaba inscrito y luego la clase se restringió a otro rol:
+    // se le deja cancelar, pero no volver a reservar.
     else if(!puede&&!res&&!esp) action="<div class='sbg sb-lk'>🔒 "+escHtml(rolesTexto(c))+"</div>";
     else if(!act){
       var t2=nextO(c);
@@ -1456,7 +1497,7 @@ function renderAlumno(){
       action="<button class='btnr' data-cid='"+c.id+"' onclick='doReserva(this.dataset.cid)'>🚲 Reservar cupo</button>";
     }
     h+="<div class='cc"+(act?"":" lkd")+"'>";
-    h+="<div class='cch'><div class='ccl'><div class='ddot "+c.id+"'><span class='dn'>"+c.sh+"</span></div>";
+    h+="<div class='cch'><div class='ccl'><div class='ddot d"+c.cD+"'><span class='dn'>"+escHtml(c.sh)+"</span></div>";
     var fClase=getClaseDate(c.cD);
     h+="<div class='ci'><h3>"+escHtml(claseTitulo(c))+"</h3><p class='fecha'>"+fClase+"</p><p>"+(c.roles.length<2?escHtml(rolesTexto(c)):"SPINNING USM")+"</p></div></div>";
     h+="<div class='ccr'><div class='cbig "+cc+"' id='cnum-"+c.id+"'>"+(cd<=0?0:cd)+"</div><div class='clbl'>cupos libres</div></div></div>";
@@ -1464,7 +1505,15 @@ function renderAlumno(){
     h+="<div class='cmeta'><span>"+ti+" inscrito(s)"+(cen>0?" + "+cen+" esp.":"")+"</span><span>"+c.bicis+" bicicletas</span></div>";
     h+="<div class='cact'>"+action+"</div></div>";
   });
-  h+="<div class='ibox' style='margin-top:13px'>ℹ️ Puedes cancelar hasta 2 horas antes. Sin cancelar y sin asistir = falta automática.</div>";
+  if(!MIS.length){
+    h+="<div class='blkc' style='background:#f8fafc;border-color:var(--bdr)'>"+
+       "<div style='font-size:34px;margin-bottom:6px'>📭</div>"+
+       "<h3 style='color:var(--navy)'>Sin clases disponibles</h3>"+
+       "<p>Por ahora no hay clases habilitadas para "+escHtml(rolLabel(miRol).toLowerCase())+
+       ". Cuando el profesor habilite una, aparecerá aquí.</p></div>";
+  } else {
+    h+="<div class='ibox' style='margin-top:13px'>ℹ️ Puedes cancelar hasta 2 horas antes. Sin cancelar y sin asistir = falta automática.</div>";
+  }
   document.getElementById("pc").innerHTML=h;
   startTmr();
   setTimeout(checkEmgPopup,500); // aviso in-app si SU clase reservada fue suspendida
@@ -1485,7 +1534,7 @@ function doReserva(id){
     resTx(function(res){
       if(!res[k])res[k]=[];
       if(res[k].indexOf(em)>=0)return res; // ya inscrito: no duplica
-      var taken=res[k].length+(D.cEsp[id]||0)+((D.esp[id]||[]).length); // cupos especiales son admin-only (estables)
+      var taken=res[k].length+(D.cEsp[k]||0)+((D.esp[k]||[]).length); // cupos especiales: admin-only y por fecha
       if(taken>=c.bicis)return false; // otro alumno tomó el último cupo
       res[k].push(em);
       return res;
@@ -1552,7 +1601,7 @@ function renderAdmin(tab){
 function rAdmC(){
   var h="";
   CL.forEach(function(c){
-    var k=rk(c.id),ins=D.res[k]||[],esps=D.esp[c.id]||[],cEsp=D.cEsp[c.id]||0;
+    var k=rk(c.id),ins=D.res[k]||[],esps=D.esp[k]||[],cEsp=D.cEsp[k]||0;
     var tot=ins.length+esps.length,asK=k+"_a",asD=D.asi[asK]||{};
     var cd=cuD(c.id),pct=Math.min(100,Math.round(tot/c.bicis*100));
     var cc=cd<=3&&cd>0?"low":cd<=0?"full":"";
@@ -1711,7 +1760,6 @@ function rAdmCfg(){
     h+="<div class='fg'><label>Reservas abren el</label>"+selDias("cf-aD-"+c.id,c.aD)+"</div>";
     h+="<div class='fg'><label>Reservas abren a las</label>"+horaInput("cf-aH-"+c.id,c.aH)+"</div>";
     h+="<div class='fg'><label>Bicicletas</label><input type='number' id='cf-bi-"+c.id+"' min='1' max='60' value='"+c.bicis+"'/></div>";
-    h+="<div class='fg'><label>Etiqueta corta</label><input type='text' id='cf-sh-"+c.id+"' maxlength='4' value='"+escHtml(c.sh)+"'/></div>";
     h+="<div class='fg full'><label>Quién puede reservar</label><div class='cfg-roles'>";
     h+="<label><input type='checkbox' id='cf-r1-"+c.id+"'"+(c.roles.indexOf("alumno")>=0?" checked":"")+"/> 🎓 Alumnos</label>";
     h+="<label><input type='checkbox' id='cf-r2-"+c.id+"'"+(c.roles.indexOf("func")>=0?" checked":"")+"/> 💼 Profesores/Funcionarios</label>";
@@ -1733,7 +1781,6 @@ function guardarClase(id){
   var cD=parseInt((document.getElementById("cf-cD-"+id)||{}).value,10);
   var aD=parseInt((document.getElementById("cf-aD-"+id)||{}).value,10);
   var bi=parseInt((document.getElementById("cf-bi-"+id)||{}).value,10);
-  var sh=((document.getElementById("cf-sh-"+id)||{}).value||"").trim().toUpperCase();
   var r1=(document.getElementById("cf-r1-"+id)||{}).checked;
   var r2=(document.getElementById("cf-r2-"+id)||{}).checked;
   if(!r1&&!r2){toast("Marca al menos un rol que pueda reservar","e");return;}
@@ -1741,7 +1788,7 @@ function guardarClase(id){
   var cH=leeHora("cf-cH-"+id,c.cH),aH=leeHora("cf-aH-"+id,c.aH);
   c.cD=isNaN(cD)?c.cD:cD; c.aD=isNaN(aD)?c.aD:aD;
   c.cH=cH; c.aH=aH; c.bicis=bi;
-  c.dia=DIAS[c.cD]; c.sh=sh||DIAS[c.cD].substring(0,3).toUpperCase();
+  c.dia=DIAS[c.cD]; c.sh=shDe(c.cD);   // etiqueta corta automática según el día
   c.roles=[].concat(r1?["alumno"]:[],r2?["func"]:[]);
   persistClases();
   toast("✅ Clase actualizada","s");renderAdmin("cfg");
@@ -1751,7 +1798,10 @@ function borrarClase(id){
   var ins=totI(id);
   cf2("Eliminar clase","¿Eliminar "+claseTitulo(c)+"?"+(ins?" Tiene "+ins+" inscrito(s); se perderán sus reservas.":""),function(){
     CL=CL.filter(function(x){return x.id!==id;});
-    delete D.cEsp[id];delete D.esp[id];delete D.emg[id];
+    // las claves ahora llevan fecha: hay que barrer todas las de esta clase
+    Object.keys(D.cEsp).forEach(function(x){if(x===id||x.endsWith("_"+id))delete D.cEsp[x];});
+    Object.keys(D.esp).forEach(function(x){if(x===id||x.endsWith("_"+id))delete D.esp[x];});
+    delete D.emg[id];
     persistClases();
     toast("Clase eliminada","w");renderAdmin("cfg");
   });
@@ -1760,17 +1810,16 @@ function nuevaClase(){
   // Id único y estable: es la clave de reservas, cupos especiales y suspensiones.
   var id="c"+Date.now().toString(36);
   CL.push(normClase({id:id,cD:2,cH:12.5,aD:1,aH:19,bicis:16,roles:["alumno","func"]}));
-  D.cEsp[id]=0;D.esp[id]=[];
   persistClases();
   toast("Clase creada — ajusta el día y la hora","s");renderAdmin("cfg");
 }
 
 function chgEsp(id,delta){
-  var act=D.cEsp[id]||0,nv=act+Number(delta);
+  var k=rk(id),act=D.cEsp[k]||0,nv=act+Number(delta);
   if(nv<0||nv>ME)return;
   if(delta>0&&totI(id)>=bicisDe(id)){toast("No hay bicicletas disponibles","e");return;}
-  if(delta<0&&(D.esp[id]||[]).length>nv){toast("Elimina primero el alumno especial asignado (✕)","e");return;}
-  D.cEsp[id]=nv;sv();toast(nv>act?"🎟️ Cupo habilitado":"🎟️ Cupo removido","s");renderAdmin("clases");
+  if(delta<0&&(D.esp[k]||[]).length>nv){toast("Elimina primero el alumno especial asignado (✕)","e");return;}
+  D.cEsp[k]=nv;sv();toast(nv>act?"🎟️ Cupo habilitado":"🎟️ Cupo removido","s");renderAdmin("clases");
 }
 function markA(cid,em,est){
   var k=rk(cid),asK=k+"_a";
@@ -1788,7 +1837,7 @@ function markA(cid,em,est){
   sv();renderAdmin("clases");
 }
 function openEsp(cid){
-  var k=rk(cid),ins=D.res[k]||[],esps=(D.esp[cid]||[]).map(function(e){return e.email;});
+  var k=rk(cid),ins=D.res[k]||[],esps=(D.esp[k]||[]).map(function(e){return e.email;});
   var c=claseById(cid);
   var disp=D.alum.filter(function(a){return ins.indexOf(a.email)<0&&esps.indexOf(a.email)<0&&rolPuede(c,rolDe(a));});
   if(!disp.length){toast("Sin personas disponibles para esta clase","w");return;}
@@ -1799,12 +1848,14 @@ function openEsp(cid){
 function confirmEsp(){
   var sel=document.getElementById("espsel"),cid=sel.dataset.cid,em=sel.value;
   var al=D.alum.find(function(a){return a.email===em;});
-  if(!D.esp[cid])D.esp[cid]=[];
-  D.esp[cid].push({email:al.email,nombre:al.nombre});
+  var k=rk(cid);
+  if(!D.esp[k])D.esp[k]=[];
+  D.esp[k].push({email:al.email,nombre:al.nombre});
   sv();closeEsp();toast("🎟️ "+al.nombre+" asignado","s");renderAdmin("clases");
 }
 function rmEsp(cid,em){
-  D.esp[cid]=(D.esp[cid]||[]).filter(function(e){return e.email!==em;});
+  var k=rk(cid);
+  D.esp[k]=(D.esp[k]||[]).filter(function(e){return e.email!==em;});
   sv();toast("Cupo removido","w");renderAdmin("clases");
 }
 function doElim(em){
@@ -1846,7 +1897,7 @@ function apellido(nombre){var p=nombre.trim().split(" ");return p.length>1?p[1]:
 function sortByApellido(rows){return rows.slice().sort(function(a,b){return apellido(a.nombre).localeCompare(apellido(b.nombre),"es");});}
 function showEP(claseId){
   var c=CL.find(function(x){return x.id===claseId;}),k=rk(claseId);
-  var ins=D.res[k]||[],esps=D.esp[claseId]||[],asD=D.asi[k+"_a"]||{};
+  var ins=D.res[k]||[],esps=D.esp[k]||[],asD=D.asi[k+"_a"]||{};
   var rows=[];
   ins.forEach(function(em){var al=D.alum.find(function(a){return a.email===em;});if(!al)return;rows.push({nombre:al.nombre,rut:al.rut,email:em,estado:asD[em]==="p"?"Presente":asD[em]==="a"?"Ausente":"Pendiente",tipo:"Normal",falt:gF(em)});});
   esps.forEach(function(e){var al=D.alum.find(function(a){return a.email===e.email;});rows.push({nombre:e.nombre,rut:al?al.rut:"-",email:e.email,estado:asD[e.email]==="p"?"Presente":asD[e.email]==="a"?"Ausente":"Pendiente",tipo:"Especial",falt:gF(e.email)});});
@@ -1979,7 +2030,7 @@ function conPDF(fn){
 // Lista de asistencia de una clase
 function expE(id){
   var c=CL.find(function(x){return x.id===id;}),k=rk(id);
-  var ins=D.res[k]||[],esps=D.esp[id]||[],asD=D.asi[k+"_a"]||{};
+  var ins=D.res[k]||[],esps=D.esp[k]||[],asD=D.asi[k+"_a"]||{};
   var rows=[];
   ins.forEach(function(em){var al=D.alum.find(function(a){return a.email===em;});if(!al)return;
     rows.push({nombre:al.nombre,rut:al.rut,email:em,est:asD[em]==="p"?"Presente":asD[em]==="a"?"Ausente":"Pendiente",tipo:"Normal",falt:gF(em)});});
