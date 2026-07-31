@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Spinning USM — colección única `spinning` (un doc por slice de D)
+    //
+    //  Antes: allow read, write: if true  →  cualquiera con el projectId
+    //  podía leer o borrar los RUTs, correos, teléfonos y fechas de
+    //  nacimiento de todos los alumnos. Ahora exige sesión iniciada.
+    //
+    //  OJO: la app lee los datos DESPUÉS del login (bootData() se llama
+    //  desde onAuthStateChanged). Si se vuelve a leer antes de
+    //  autenticarse, estas reglas lo rechazan.
+    // ══════════════════════════════════════════════════════════════════
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // El admin se identifica por el correo de su cuenta de Authentication.
+    // Debe coincidir con window.ADMIN_EMAIL en firebase-config.js.
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'jorge.henriquezh@usm.cl';
+    }
+
+    // Slices que un alumno necesita escribir para operar:
+    //   alum  → su ficha (registro y "Mi Cuenta"), vía transacción alumTx
+    //   res   → reservar y cancelar, vía transacción resTx
+    //   notif → avisar al profesor (registro, cancelación, clase llena)
+    // El resto (adm, asi, fal, blq, cEsp, esp, emg) es solo del admin:
+    // son las faltas, los bloqueos, la asistencia y la suspensión de clases.
+    function alumnoPuedeEscribir(doc) {
+      return doc in ['alum', 'res', 'notif'];
+    }
+
+    match /spinning/{doc} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin() || (signedIn() && alumnoPuedeEscribir(doc));
+      // Borrar un documento entero borraría a todos los alumnos o todas las
+      // reservas de una vez. Ningún alumno tiene por qué poder hacerlo.
+      allow delete: if isAdmin();
+    }
+  }
+}

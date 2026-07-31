@@ -18,7 +18,9 @@
   --red:#d32f2f;--warn:#f57c00;--info:#1565c0;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:#1a2332;min-height:100vh;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:#1a2332;min-height:100vh;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+/* Campos de texto a 16px mínimo: evita el auto-zoom de iOS/Android al enfocar (que dejaba la pantalla "pegada" en zoom tras ingresar). Los <select> no hacen zoom. */
+input[type=text],input[type=email],input[type=password],input[type=tel],input[type=number],input[type=date],input[type=search],textarea{font-size:16px;}
 
 #splash{
   position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;
@@ -78,7 +80,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:#1a2332;min-heig
 
 .fg{margin-bottom:12px;position:relative;}
 .fg label{display:block;font-size:11px;font-weight:700;color:var(--gt);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
-.fg input,.fg select{width:100%;padding:10px 36px 10px 12px;border:1.5px solid var(--bdr);border-radius:6px;font-family:'Nunito',sans-serif;font-size:14px;color:#1a2332;outline:none;transition:border-color .2s;background:#fff;}
+.fg input,.fg select{width:100%;padding:10px 36px 10px 12px;border:1.5px solid var(--bdr);border-radius:6px;font-family:'Nunito',sans-serif;font-size:16px;color:#1a2332;outline:none;transition:border-color .2s;background:#fff;}
 .fg input:focus,.fg select:focus{border-color:var(--navy);}
 .fg input:disabled{background:#f5f5f5;color:#999;cursor:not-allowed;}
 .eye{position:absolute;right:10px;top:29px;cursor:pointer;font-size:15px;color:var(--gm);user-select:none;}
@@ -321,6 +323,27 @@ body {
 .bday-card h2{font-family:'Oswald',sans-serif;font-size:24px;color:var(--navy);margin-bottom:8px;}
 .bday-card p{font-size:14px;color:var(--gt);margin-bottom:20px;line-height:1.5;}
 .bday-confetti{font-size:20px;letter-spacing:6px;margin-bottom:16px;}
+
+/* Notificaciones admin */
+.bell-wrap{position:relative;display:inline-flex;align-items:center;}
+.bell-btn{background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+.bell-btn:hover{background:rgba(255,255,255,.22);}
+.bell-badge{position:absolute;top:-2px;right:-2px;background:#ef5350;color:#fff;border-radius:50%;min-width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #003366;pointer-events:none;padding:0 2px;}
+.bell-badge.hidden{display:none!important;}
+.notif-panel{position:fixed;top:calc(54px + env(safe-area-inset-top,0px));right:12px;width:300px;max-width:92vw;background:#fff;border-radius:13px;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:150;overflow:hidden;max-height:70vh;display:none;}
+.notif-panel.open{display:block;}
+.notif-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;font-family:'Oswald',sans-serif;font-size:14px;color:var(--navy);border-bottom:1px solid var(--bdr);}
+.notif-clr{font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;color:var(--red);cursor:pointer;}
+.notif-clr:hover{text-decoration:underline;}
+#notif-list{max-height:calc(70vh - 48px);overflow-y:auto;}
+.notif-item{display:flex;gap:9px;padding:11px 14px;border-bottom:1px solid #f0f3f7;align-items:flex-start;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item.unread{background:#f0f6ff;}
+.notif-ic{font-size:18px;flex-shrink:0;line-height:1.2;}
+.notif-bd{flex:1;min-width:0;}
+.notif-msg{font-size:12.5px;color:#1a2332;line-height:1.35;}
+.notif-tm{font-size:10px;color:var(--gm);margin-top:2px;}
+.notif-empty{padding:22px 14px;text-align:center;color:var(--gm);font-size:12px;}
 </style>
 </head>
 <body>
@@ -353,7 +376,10 @@ body {
       <div style="text-align:right;margin-top:-5px;margin-bottom:9px">
         <a class="lnk" onclick="showView('v-rec')">¿Olvidaste tu contraseña?</a>
       </div>
-      <button class="btn-p" onclick="doLogin()">Ingresar</button>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gt);margin-bottom:11px;cursor:pointer">
+        <input type="checkbox" id="l-remember" checked style="width:auto;margin:0;cursor:pointer"/> Mantener sesión iniciada
+      </label>
+      <button class="btn-p" id="lbtn" onclick="doLogin()">Ingresar</button>
       <p class="sw">¿No tienes cuenta? <a onclick="showView('v-reg')">Regístrate aquí</a></p>
     </div>
 
@@ -364,7 +390,7 @@ body {
       <div id="rerr" class="ebox"></div>
       <div id="rok" class="obox"></div>
       <div class="fg"><label>Nombre Completo *</label><input type="text" id="rnm" placeholder="Juan Pérez González"/></div>
-      <div class="fg"><label>RUT *</label><input type="text" id="rrt" placeholder="12.345.678-9"/></div>
+      <div class="fg"><label>RUT *</label><input type="text" id="rrt" placeholder="12.345.678-9" maxlength="12" oninput="onRutInput('rrt')"/></div>
       <div class="fg"><label>Fecha de Nacimiento *</label><input type="date" id="rfd" required/></div>
       <div class="fg"><label>Teléfono WhatsApp * <span style="color:var(--gm);font-weight:400;font-size:10px">(requerido para recuperar contraseña)</span></label>
         <div class="phone-wrap">
@@ -417,7 +443,7 @@ body {
         <span class="eye" onclick="toggleEye('rps2',this)">👁</span>
         <div class="pass-reqs"><span class="req" id="rqm">Las contraseñas coinciden</span></div>
       </div>
-      <button class="btn-p" onclick="doRegister()">Crear Cuenta</button>
+      <button class="btn-p" id="rbtn" onclick="doRegister()">Crear Cuenta</button>
       <p class="sw">¿Ya tienes cuenta? <a onclick="showView('v-login')">Inicia sesión</a></p>
     </div>
 
@@ -427,54 +453,10 @@ body {
       <p class="sub">Elige cómo recuperar tu acceso</p>
       <div id="recerr" class="ebox"></div>
       <div id="recok" class="obox"></div>
-      <div id="rec-main">
-        <div class="rec-opts">
-          <div class="ropt" onclick="showRS('email')"><span class="ri">📧</span><div><h4>Recuperar por correo</h4><p>Recibe un enlace en tu correo USM</p></div></div>
-          <div class="ropt" onclick="showRS('preg')"><span class="ri">❓</span><div><h4>Preguntas de seguridad</h4><p>Responde tus 3 preguntas registradas</p></div></div>
-          <div class="ropt" onclick="showRS('wa')"><span class="ri">💬</span><div><h4>Recuperar por WhatsApp</h4><p>Código a tu número +56 9</p></div></div>
-        </div>
-      </div>
-      <div id="rec-email-s" class="hidden">
-        <div class="fg"><label>Correo USM</label><input type="email" id="rcem" placeholder="nombre@usm.cl"/></div>
-        <button class="btn-p" onclick="doRecEm()">Enviar enlace</button>
-        <p class="sw" style="margin-top:9px"><a onclick="backRec()">← Volver</a></p>
-      </div>
-      <div id="rec-preg-s" class="hidden">
-        <div class="fg"><label>Tu correo USM</label><input type="email" id="rpem" placeholder="nombre@usm.cl" oninput="loadPQ()"/></div>
-        <div id="pq-fields"></div>
-        <div id="pq-np" class="hidden">
-          <div class="fg"><label>Nueva Contraseña</label>
-            <input type="password" id="rpnp" placeholder="Nueva contraseña" oninput="chkRP()"/>
-            <span class="eye" onclick="toggleEye('rpnp',this)">👁</span>
-            <div class="pass-reqs"><span class="req" id="rpq1">Mínimo 6 caracteres</span><span class="req" id="rpq2">Al menos una mayúscula</span><span class="req" id="rpq3">Al menos un número</span><span class="req" id="rpq4">Al menos una letra</span></div>
-          </div>
-          <div class="fg"><label>Confirmar</label>
-            <input type="password" id="rpnp2" placeholder="Confirmar" oninput="chkRPM()"/>
-            <span class="eye" onclick="toggleEye('rpnp2',this)">👁</span>
-            <div class="pass-reqs"><span class="req" id="rpqm">Las contraseñas coinciden</span></div>
-          </div>
-        </div>
-        <button class="btn-p" id="rpbtn" onclick="doRecPreg()">Verificar respuestas</button>
-        <p class="sw" style="margin-top:9px"><a onclick="backRec()">← Volver</a></p>
-      </div>
-      <div id="rec-wa-s" class="hidden">
-        <div class="fg"><label>Correo USM</label><input type="email" id="rwaem" placeholder="nombre@usm.cl"/></div>
-        <button class="btn-p btn-wa" onclick="doRecWA()">💬 Enviar código por WhatsApp</button>
-        <div id="wa-code-s" class="hidden" style="margin-top:11px">
-          <div class="fg"><label>Código recibido</label><input type="text" id="rwac" placeholder="6 dígitos" maxlength="6"/></div>
-          <div class="fg"><label>Nueva Contraseña</label>
-            <input type="password" id="rwanp" placeholder="Nueva contraseña" oninput="chkRWA()"/>
-            <span class="eye" onclick="toggleEye('rwanp',this)">👁</span>
-            <div class="pass-reqs"><span class="req" id="wq1">Mínimo 6 caracteres</span><span class="req" id="wq2">Al menos una mayúscula</span><span class="req" id="wq3">Al menos un número</span><span class="req" id="wq4">Al menos una letra</span></div>
-          </div>
-          <div class="fg"><label>Confirmar</label>
-            <input type="password" id="rwanp2" placeholder="Confirmar" oninput="chkRWAM()"/>
-            <span class="eye" onclick="toggleEye('rwanp2',this)">👁</span>
-            <div class="pass-reqs"><span class="req" id="wqm">Las contraseñas coinciden</span></div>
-          </div>
-          <button class="btn-p" onclick="doRecWAConf()">Cambiar contraseña</button>
-        </div>
-        <p class="sw" style="margin-top:9px"><a onclick="backRec()">← Volver</a></p>
+      <div id="rec-email-s">
+        <div class="ibox">Te enviaremos un enlace a tu correo para crear una contraseña nueva. Revisa también la carpeta de spam.</div>
+        <div class="fg"><label>Tu correo</label><input type="email" id="rcem" placeholder="nombre@usm.cl"/></div>
+        <button class="btn-p" id="emSendBtn" onclick="doRecEm()">📧 Enviar enlace de recuperación</button>
       </div>
       <p class="sw" style="margin-top:10px"><a onclick="showView('v-login')">← Volver al inicio</a></p>
     </div>
@@ -494,40 +476,20 @@ body {
       <div style="text-align:right;margin-top:-5px;margin-bottom:9px">
         <a class="lnk" onclick="showAdmRec()">¿Olvidaste tu contraseña?</a>
       </div>
-      <button class="btn-p btn-gold" onclick="doAdmLogin()">Acceder como Admin</button>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--gt);margin-bottom:11px;cursor:pointer">
+        <input type="checkbox" id="a-remember" checked style="width:auto;margin:0;cursor:pointer"/> Mantener sesión iniciada
+      </label>
+      <button class="btn-p btn-gold" id="abtn" onclick="doAdmLogin()">Acceder como Admin</button>
     </div>
     <div id="adm-rv" class="hidden">
       <h2>Recuperar — Admin</h2>
       <p class="sub">Elige método de recuperación</p>
       <div id="areerr" class="ebox"></div>
       <div id="areok" class="obox"></div>
-      <div id="adm-rec-main">
-        <div class="rec-opts">
-          <div class="ropt" onclick="showARS('email')"><span class="ri">📧</span><div><h4>Recuperar por correo</h4><p>Enlace a tu correo admin</p></div></div>
-          <div class="ropt" onclick="showARS('preg')"><span class="ri">❓</span><div><h4>Preguntas de seguridad</h4><p>Responde tus 3 preguntas</p></div></div>
-        </div>
-      </div>
-      <div id="adm-rec-email" class="hidden">
+      <div id="adm-rec-email">
+        <div class="ibox">Te enviaremos un enlace a tu correo admin para crear una contraseña nueva.</div>
         <div class="fg"><label>Correo Admin</label><input type="email" id="arecm" placeholder="admin@usm.cl"/></div>
-        <button class="btn-p btn-gold" onclick="doAdmRecEm()">Enviar enlace</button>
-        <p class="sw" style="margin-top:9px"><a onclick="backARec()">← Volver</a></p>
-      </div>
-      <div id="adm-rec-preg" class="hidden">
-        <div id="apq-fields"></div>
-        <div id="apq-np" class="hidden">
-          <div class="fg"><label>Nueva Contraseña</label>
-            <input type="password" id="apnp" placeholder="Nueva contraseña" oninput="chkAP()"/>
-            <span class="eye" onclick="toggleEye('apnp',this)">👁</span>
-            <div class="pass-reqs"><span class="req" id="aq1">Mínimo 6 caracteres</span><span class="req" id="aq2">Al menos una mayúscula</span><span class="req" id="aq3">Al menos un número</span><span class="req" id="aq4">Al menos una letra</span></div>
-          </div>
-          <div class="fg"><label>Confirmar</label>
-            <input type="password" id="apnp2" placeholder="Confirmar" oninput="chkAPM()"/>
-            <span class="eye" onclick="toggleEye('apnp2',this)">👁</span>
-            <div class="pass-reqs"><span class="req" id="aqm">Las contraseñas coinciden</span></div>
-          </div>
-        </div>
-        <button class="btn-p btn-gold" id="apbtn" onclick="doAdmRecPreg()">Verificar respuestas</button>
-        <p class="sw" style="margin-top:9px"><a onclick="backARec()">← Volver</a></p>
+        <button class="btn-p btn-gold" onclick="doAdmRecEm()">📧 Enviar enlace de recuperación</button>
       </div>
       <p class="sw" style="margin-top:10px"><a onclick="backAdmLogin()">← Volver al inicio</a></p>
     </div>
@@ -544,11 +506,22 @@ body {
     <div class="hr2">
       <span class="ubdg" id="h-user"></span>
       <span class="abdg hidden" id="h-ab">Admin</span>
+      <div class="bell-wrap" id="bell-wrap" style="display:none">
+        <button class="bell-btn" onclick="toggleNotif()" title="Notificaciones">🔔</button>
+        <span class="bell-badge hidden" id="bell-badge">0</span>
+      </div>
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-hdr">🔔 Notificaciones
+          <span class="notif-clr" onclick="clearNotifs()">Limpiar</span>
+        </div>
+        <div id="notif-list"></div>
+      </div>
       <button class="bicn" onclick="openSettings()">⚙️</button>
       <button class="bout" onclick="doLogout()">Salir</button>
     </div>
   </header>
-  <div class="emgban" id="emgban">🚨 CLASES SUSPENDIDAS — Taller cancelado temporalmente. Disculpa las molestias.</div>
+  <!-- El texto lo arma updateEmgBanner() con la fecha suspendida -->
+  <div class="emgban" id="emgban"></div>
   <div class="abody">
     <div class="shdr"><div class="stitle" id="pg-title">-</div><div class="ssub" id="pg-sub">-</div></div>
     <div class="pc" id="pc"></div>
@@ -590,7 +563,21 @@ body {
     <button class="btn-p" onclick="document.getElementById('bday-popup').classList.add('hidden')" style="max-width:200px;margin:0 auto">¡Gracias! 🎉</button>
   </div>
 </div>
+<div class="bday-popup hidden" id="emg-popup">
+  <div class="bday-card">
+    <span class="bday-emoji" style="animation:none">🚨</span>
+    <h2 id="emg-title" style="color:#c62828">Clase suspendida</h2>
+    <p id="emg-msg"></p>
+    <button class="btn-p" onclick="document.getElementById('emg-popup').classList.add('hidden')" style="max-width:220px;margin:0 auto;background:#c62828">Entendido</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
+
+<!-- Firebase SDK + configuración (datos compartidos en la nube) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="firebase-config.js?v=3"></script>
 
 <script>
 
@@ -652,14 +639,51 @@ function showBdayPopup(nombre){
   pop.classList.remove("hidden");
 }
 
-function getClaseDate(claseDia) {
-  // claseDia: 2=martes, 4=jueves
+// Popup in-app: avisa al alumno inscrito cuando SU clase reservada queda suspendida.
+// Se muestra una sola vez por suspensión (marca en localStorage); si el admin reactiva
+// y vuelve a suspender, se notifica de nuevo. Cubre tanto al entrar como en vivo (snapshot).
+function checkEmgPopup(){
+  if(!CU||ISADM||!CL)return;
+  var toShow=[];
+  CL.forEach(function(c){
+    var key="emgseen_"+CU.email+"_"+c.id+"_"+claseDateKey(c.cD); // por fecha: cada suspensión avisa una vez
+    var susp=isClaseSusp(c.id);
+    var involved=hasR(CU.email,c.id)||isE(CU.email,c.id);
+    if(susp&&involved){
+      var seen=false;try{seen=localStorage.getItem(key)==="1";}catch(e){}
+      if(!seen){toShow.push(c);try{localStorage.setItem(key,"1");}catch(e){}}
+    } else if(!susp){
+      try{localStorage.removeItem(key);}catch(e){}
+    }
+  });
+  if(!toShow.length)return;
+  var lines=toShow.map(function(c){return "<strong>"+c.dia+" 12:30</strong> ("+getClaseDate(c.cD)+")";}).join("<br>");
+  var m=document.getElementById("emg-msg"),pop=document.getElementById("emg-popup");
+  if(!m||!pop)return;
+  m.innerHTML="Tu clase fue <strong>suspendida</strong>:<br><br>"+lines+"<br><br>Tu reserva queda registrada. Disculpa las molestias.";
+  pop.classList.remove("hidden");
+}
+
+// Fecha (Date a medianoche) de la próxima ocurrencia de la clase.
+// claseDia: 2=martes, 4=jueves. El mismo día de la clase cuenta como "la de hoy";
+// recién al pasar ese día rueda a la semana siguiente.
+function claseDateObj(claseDia) {
   var now = new Date();
-  var day = now.getDay(); // 0=dom,1=lun,2=mar...
-  var diff = claseDia - day;
+  var diff = claseDia - now.getDay(); // 0=dom,1=lun,2=mar...
   if (diff < 0) diff += 7;
   var d = new Date(now);
   d.setDate(now.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+// Clave estable "AAAA-MM-DD" de esa ocurrencia. Es lo que se guarda al suspender:
+// así la suspensión vale SOLO para esa fecha y no deja bloqueados todos los martes.
+function claseDateKey(claseDia) {
+  var d = claseDateObj(claseDia);
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+}
+function getClaseDate(claseDia) {
+  var d = claseDateObj(claseDia);
   var months = ["enero","febrero","marzo","abril","mayo","junio",
                 "julio","agosto","septiembre","octubre","noviembre","diciembre"];
   return d.getDate() + " de " + months[d.getMonth()] + " " + d.getFullYear();
@@ -671,32 +695,218 @@ function todayStr() {
   return d.getDate() + " de " + months[d.getMonth()] + " " + d.getFullYear();
 }
 
-function ld(k,d){try{return JSON.parse(localStorage.getItem(k))||d;}catch(e){return d;}}
-
+// ── PERSISTENCIA EN LA NUBE (Firestore) ──────────────────────────────────
+// Todos los dispositivos (web y app) comparten los mismos datos en tiempo real.
 var D={
-  adm:ld('sp_adm',{email:'jorge.henriquezh@usm.cl',pass:'Admin123',nombre:'Jorge Henríquez',fechaNac:'',tel:'',
-    preguntas:[{p:PQL[0],r:'firulais'},{p:PQL[1],r:'valparaiso'},{p:PQL[5],r:'henriquez'}]}),
-  alum:ld('sp_alum',[]),res:ld('sp_res',{}),asi:ld('sp_asi',{}),
-  fal:ld('sp_fal',{}),blq:ld('sp_blq',{}),
-  cEsp:ld('sp_cEsp',{martes:0,jueves:0}),
-  esp:ld('sp_esp',{martes:[],jueves:[]}),
-  emg:ld('sp_emg',{activa:false})
+  adm:{email:'jorge.henriquezh@usm.cl',pass:'Admin123',nombre:'Jorge Henríquez',fechaNac:'',tel:'',
+    preguntas:[{p:PQL[0],r:'firulais'},{p:PQL[1],r:'valparaiso'},{p:PQL[5],r:'henriquez'}]},
+  alum:[],res:{},asi:{},
+  fal:{},blq:{},
+  cEsp:{martes:0,jueves:0},
+  esp:{martes:[],jueves:[]},
+  emg:{activa:false},
+  notif:[]
 };
+var SLICES=["adm","alum","res","asi","fal","blq","cEsp","esp","emg","notif"];
+// Slices que SOLO el admin puede escribir (así lo exigen ahora las reglas de Firestore).
+// Un alumno que llame a sv() los omite: sus datos propios (alum/res/notif) van por transacción.
+var ADMIN_SLICES=["adm","asi","fal","blq","cEsp","esp","emg"];
 
+// Guarda en Firestore. Mantiene el nombre sv() para que todos los llamados existentes sigan funcionando.
 function sv(){
-  localStorage.setItem('sp_adm',JSON.stringify(D.adm));
-  localStorage.setItem('sp_alum',JSON.stringify(D.alum));
-  localStorage.setItem('sp_res',JSON.stringify(D.res));
-  localStorage.setItem('sp_asi',JSON.stringify(D.asi));
-  localStorage.setItem('sp_fal',JSON.stringify(D.fal));
-  localStorage.setItem('sp_blq',JSON.stringify(D.blq));
-  localStorage.setItem('sp_cEsp',JSON.stringify(D.cEsp));
-  localStorage.setItem('sp_esp',JSON.stringify(D.esp));
-  localStorage.setItem('sp_emg',JSON.stringify(D.emg));
+  if(!window.db)return;
+  SLICES.forEach(function(k){
+    if(k==="notif")return; // notif se maneja aparte con operaciones atómicas (no se sobrescribe completo)
+    if(k==="alum")return;  // alum también: se escribe con transacciones (alumAdd/alumUpdate/alumRemove) para no pisar alumnos recién registrados
+    if(k==="res")return;   // res también: se escribe con transacciones (resTx) para que dos alumnos reservando a la vez no se pisen ni se pase de cupo
+    if(!ISADM&&ADMIN_SLICES.indexOf(k)>=0)return; // el alumno no escribe slices de admin (evita permission-denied)
+    db.collection("spinning").doc(k).set({value:D[k]}).catch(function(e){console.warn("Error guardando "+k,e);});
+  });
+}
+
+// ── ALUMNOS: escritura ATÓMICA por transacción ────────────────────────────
+// Antes, sv() reescribía TODO el array D.alum en cada acción. Si un dispositivo
+// con datos viejos (típicamente el panel del profesor siempre abierto) guardaba,
+// borraba al alumno que se acababa de registrar en otro dispositivo. Al volver a
+// entrar, ese alumno ya no estaba en D.alum y se creaba un placeholder con el
+// nombre = usuario del correo (el síntoma reportado). La transacción lee el array
+// fresco del servidor, aplica el cambio y reintenta si hubo conflicto → nunca pisa.
+function alumTx(mutate){
+  if(!window.db)return Promise.resolve();
+  var ref=db.collection("spinning").doc("alum");
+  return db.runTransaction(function(t){
+    return t.get(ref).then(function(doc){
+      var arr=(doc.exists&&doc.data()&&Array.isArray(doc.data().value))?doc.data().value.slice():[];
+      var out=mutate(arr);
+      t.set(ref,{value:out!==undefined?out:arr});
+    });
+  }).catch(function(e){console.warn("alumTx",e);});
+}
+function alumAdd(obj){return alumTx(function(arr){
+  if(!arr.some(function(a){return a.email===obj.email;}))arr.push(obj);
+  return arr;
+});}
+function alumUpdate(email,fields){return alumTx(function(arr){
+  var i=arr.findIndex(function(a){return a.email===email;});
+  if(i>=0){for(var k in fields)arr[i][k]=fields[k];}
+  else{var n={email:email};for(var k2 in fields)n[k2]=fields[k2];arr.push(n);}
+  return arr;
+});}
+function alumRemove(email){return alumTx(function(arr){
+  return arr.filter(function(a){return a.email!==email;});
+});}
+
+// ── RESERVAS: escritura ATÓMICA por transacción ───────────────────────────
+// res se reescribía entero en cada sv(). Dos alumnos reservando la misma clase
+// a la vez se pisaban (uno perdía su cupo) y se podía pasar de 16. La transacción
+// relee res fresco del servidor, aplica el cambio y reintenta si hubo conflicto.
+// mutate(res) devuelve el objeto a guardar, o `false` para abortar (sin cupo).
+function resTx(mutate){
+  if(!window.db)return Promise.reject(new Error("nodb"));
+  var ref=db.collection("spinning").doc("res");
+  return db.runTransaction(function(t){
+    return t.get(ref).then(function(doc){
+      var obj=(doc.exists&&doc.data()&&doc.data().value&&typeof doc.data().value==="object")?doc.data().value:{};
+      var out=mutate(obj);
+      if(out===false)throw new Error("nocupo");
+      t.set(ref,{value:out!==undefined?out:obj});
+    });
+  });
+}
+var _notifLastRead=0;
+
+var _dataReady=false,_firstSeen={},_alumExistedAtBoot=null;
+// _loadFailed: los snapshots respondieron con error (permisos/red). Es importante distinguirlo
+// de "cargó y está vacío": si falló, NO hay que crear placeholders de alumno (borraría el nombre real).
+var _loadFailed=false,_unsubs=[],_booted=false;
+// Espera a que los 10 slices hayan llegado. Ahora los datos se leen DESPUÉS del login,
+// así que el flujo de ingreso tiene que esperar aquí antes de buscar al alumno.
+function whenDataReady(){
+  if(_dataReady)return Promise.resolve();
+  return new Promise(function(resolve){
+    var t=setInterval(function(){if(_dataReady){clearInterval(t);clearTimeout(to);resolve();}},100);
+    var to=setTimeout(function(){clearInterval(t);_loadFailed=true;resolve();},10000); // no colgar la UI para siempre
+  });
+}
+function refreshUI(){
+  if(!CU)return;
+  updateEmgBanner(); // si el profesor suspende, el banner del alumno cambia en vivo
+  if(ISADM){renderAdmin(ATAB);updateBell();}else renderAlumno();
+}
+
+// ── "Mantener sesión iniciada" ──────────────────────────────────────────
+// Si el check está marcado → persistencia LOCAL (sobrevive cerrar el navegador
+// y entra solo la próxima vez). Si no → SESSION (se pide login al cerrar).
+function authPersist(chkId){
+  if(!window.auth||!firebase.auth.Auth)return Promise.resolve();
+  var el=document.getElementById(chkId);
+  var remember=el?el.checked:true;
+  var P=firebase.auth.Auth.Persistence;
+  return auth.setPersistence(remember?P.LOCAL:P.SESSION).catch(function(){});
+}
+var _authKnown=false,_authUser=null,_autoLoginDone=false;
+// El auto-login es solo para "ya venía con sesión guardada al abrir la app". En cuanto el
+// usuario hace login/registro a mano, se desactiva: si no, al registrarse (que deja la sesión
+// abierta un instante) el auto-login lo metería a la app en vez de devolverlo al login.
+function cancelAutoLogin(){_autoLoginDone=true;}
+function maybeAutoLogin(){
+  if(_autoLoginDone)return;
+  if(!_authKnown||!_dataReady)return;   // espera a saber la sesión Y a que carguen los datos
+  _autoLoginDone=true;                    // una sola vez al arrancar
+  var u=_authUser;if(!u)return;
+  var em=(u.email||"").toLowerCase();
+  if(em===ADMIN_EMAIL){D.adm.email=em;CU=D.adm;ISADM=true;enterApp();return;}
+  var al=D.alum.find(function(a){return a.email===em;});
+  // Si la carga falló no inventamos un alumno: ese placeholder pisaría el nombre real.
+  if(!al&&_loadFailed){toast("No se pudieron cargar tus datos. Revisa tu conexión.","e");return;}
+  if(!al){al={nombre:em.split("@")[0],rut:"",email:em,fechaNac:"",tel:"",preguntas:[]};D.alum.push(al);alumAdd(al);}
+  CU=al;ISADM=false;enterApp();
+}
+// Escucha cada porción de datos en tiempo real: cualquier cambio en cualquier dispositivo se refleja al instante.
+// Se llama SOLO con sesión iniciada: las reglas de Firestore ya no permiten leer de forma anónima.
+function bootData(){
+  if(_booted)return;_booted=true;
+  SLICES.forEach(function(k){
+    _unsubs.push(db.collection("spinning").doc(k).onSnapshot(function(snap){
+      if(k==="alum"&&_firstSeen[k]!==true)_alumExistedAtBoot=snap.exists;
+      _firstSeen[k]=true;
+      if(snap.exists){var d=snap.data();if(d&&d.value!==undefined)D[k]=d.value;
+        if(k==="notif"&&d&&typeof d.lastReadId==="number")_notifLastRead=d.lastReadId;}
+      if(!_dataReady){
+        if(SLICES.every(function(s){return _firstSeen[s];})){
+          _dataReady=true;
+          // Solo siembra los datos demo la primera vez (base de datos vacía).
+          if(_alumExistedAtBoot===false&&(!D.alum||!D.alum.length))seedDemo();
+          maybeAutoLogin();
+        }
+      } else { refreshUI(); }
+    },function(err){
+      console.error("Firestore ("+k+"):",err);
+      _firstSeen[k]=true;_loadFailed=true;
+      if(!_dataReady&&SLICES.every(function(s){return _firstSeen[s];}))_dataReady=true;
+    }));
+  });
+}
+// Al cerrar sesión hay que soltar los listeners: sin sesión las reglas los rechazan
+// y quedarían reintentando con permission-denied en consola.
+function stopData(){
+  _unsubs.forEach(function(u){try{u();}catch(e){}});
+  _unsubs=[];_booted=false;_dataReady=false;_loadFailed=false;_firstSeen={};_alumExistedAtBoot=null;
 }
 
 
-function isClaseSusp(id){return D.emg&&D.emg[id]===true;}
+// Una clase está suspendida solo si la fecha guardada en D.emg[id] es la de su
+// próxima ocurrencia. Al pasar ese día la fecha deja de coincidir y la clase queda
+// disponible sola, sin que el profesor tenga que reactivarla a mano.
+function isClaseSusp(id){
+  if(!D.emg)return false;
+  var v=D.emg[id];
+  if(v===true)return true; // formato antiguo (suspensión sin fecha), aún sin normalizar
+  if(typeof v!=="string")return false;
+  var c=CL.find(function(x){return x.id===id;});
+  return !!c&&v===claseDateKey(c.cD);
+}
+// Migración única de las reservas guardadas con el formato viejo (clave = lunes de la semana).
+// Solo se traspasa la clase de la semana en curso que TODAVÍA no ocurre: las que ya pasaron se
+// quedan como historial, porque arrastrarlas a la próxima fecha es justamente el bug que se corrige.
+function migrateResKeys(){
+  if(!ISADM||!D.res)return;
+  var changed=false;
+  CL.forEach(function(c){
+    var oldK=wk()+"_"+c.id,newK=claseDateKey(c.cD)+"_"+c.id;
+    if(oldK===newK)return;                                  // nada que migrar
+    if(mondayOf(claseDateObj(c.cD))!==wk())return;          // la próxima ocurrencia ya es de otra semana
+    if(!D.res[oldK]||!D.res[oldK].length)return;            // sin reservas viejas
+    if(D.res[newK]&&D.res[newK].length)return;              // ya migrado
+    D.res[newK]=D.res[oldK].slice();delete D.res[oldK];
+    if(D.asi&&D.asi[oldK+"_a"]){D.asi[newK+"_a"]=D.asi[oldK+"_a"];delete D.asi[oldK+"_a"];}
+    changed=true;
+  });
+  if(!changed)return;
+  var copia=JSON.parse(JSON.stringify(D.res));
+  resTx(function(){return copia;}).catch(function(e){console.warn("migrateResKeys",e);});
+  sv(); // asi viaja en el guardado masivo
+}
+// El formato viejo guardaba true (suspendida para siempre). Se interpreta como
+// "suspendida la fecha en curso" y el admin la convierte a fecha al entrar, una sola vez.
+function normalizeEmg(){
+  if(!ISADM||!D.emg)return;
+  var ch=false;
+  CL.forEach(function(c){if(D.emg[c.id]===true){D.emg[c.id]=claseDateKey(c.cD);ch=true;}});
+  if(ch)sv();
+}
+// Texto del banner rojo: nombra la fecha suspendida en vez del genérico "clases suspendidas".
+function updateEmgBanner(){
+  var el=document.getElementById("emgban");if(!el)return;
+  var susp=CL.filter(function(c){return isClaseSusp(c.id);});
+  if(!susp.length){el.style.display="none";return;}
+  var fechas=susp.map(function(c){return getClaseDate(c.cD);}).join(" y ");
+  el.textContent="🚨 "+(susp.length>1
+    ?"Clases de las fechas "+fechas+" están suspendidas"
+    :"Clase de la fecha "+fechas+" está suspendida")+
+    ", atento a la nueva disponibilidad.";
+  el.style.display="block";
+}
 
 var CL=[
   {id:"martes",dia:"Martes",sh:"MAR",aD:1,aH:19,cD:2,cH:12.5},
@@ -704,13 +914,24 @@ var CL=[
 ];
 var MB=16,ME=2,MF=3,BD=14;
 
-function wk(){
-  var n=new Date(),d=n.getDay(),diff=n.getDate()-d+(d===0?-6:1);
-  var m=new Date(n);m.setDate(diff);
+function pad(x){return String(x).padStart(2,"0");}
+// Lunes de la semana a la que pertenece una fecha. Ya NO se usa para guardar reservas
+// (ver rk); queda solo para la migración de las claves antiguas.
+function mondayOf(dt){
+  var d=new Date(dt),k=d.getDay(),diff=d.getDate()-k+(k===0?-6:1);
+  var m=new Date(d);m.setDate(diff);
   return m.getFullYear()+"-"+pad(m.getMonth()+1)+"-"+pad(m.getDate());
 }
-function pad(x){return String(x).padStart(2,"0");}
-function rk(id){return wk()+"_"+id;}
+function wk(){return mondayOf(new Date());}
+// Clave de reservas. Antes era el LUNES de la semana, y por eso los cupos seguían
+// ocupados después de que la clase ya había pasado: recién se liberaban el lunes
+// siguiente, mostrando la fecha de la próxima clase con la ocupación de la anterior.
+// Ahora la clave es la FECHA de la clase, así que al pasar el día rueda sola a la
+// próxima ocurrencia y los 16 cupos aparecen libres.
+function rk(id){
+  var c=CL.find(function(x){return x.id===id;});
+  return (c?claseDateKey(c.cD):wk())+"_"+id;
+}
 
 function isAct(c){
   var n=new Date(),dia=n.getDay(),h=n.getHours()+n.getMinutes()/60;
@@ -742,8 +963,79 @@ function iBl(em){
 function gF(em){return D.fal[em]||0;}
 function vUSM(em){return em.endsWith("@usm.cl")||em.endsWith("@sansano.usm.cl");}
 function vP(p){return p.length>=6&&/[A-Z]/.test(p)&&/[0-9]/.test(p)&&/[a-z]/.test(p);}
+
+// ── RUT chileno: limpiar, formatear (12.345.678-9), dígito verificador y validar ──
+function cleanRut(v){return (v||"").toString().toUpperCase().replace(/[^0-9K]/g,"");}
+function dvRut(cuerpo){var s=0,m=2;for(var i=cuerpo.length-1;i>=0;i--){s+=parseInt(cuerpo.charAt(i),10)*m;m=m===7?2:m+1;}var r=11-(s%11);return r===11?"0":r===10?"K":String(r);}
+function formatRut(v){var c=cleanRut(v);if(c.length<2)return c;var cuerpo=c.slice(0,-1),dv=c.slice(-1);return cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g,".")+"-"+dv;}
+function validaRut(v){var c=cleanRut(v);if(c.length<2||c.length>9)return false;var cuerpo=c.slice(0,-1),dv=c.slice(-1);if(!/^\d+$/.test(cuerpo))return false;return dvRut(cuerpo)===dv;}
+// Formateo en vivo mientras el alumno escribe (cursor al final, suficiente para entrada secuencial).
+function onRutInput(id){var el=document.getElementById(id);if(!el)return;el.value=formatRut(el.value);}
 function norm(s){return s.trim().toLowerCase().replace(/[áàä]/g,"a").replace(/[éèë]/g,"e").replace(/[íìï]/g,"i").replace(/[óòö]/g,"o").replace(/[úùü]/g,"u").replace(/ñ/g,"n");}
 function ini(n){return n.split(" ").map(function(x){return x[0];}).join("").substring(0,2).toUpperCase();}
+
+// ── NOTIFICACIONES ADMIN (en Firestore: el admin las ve en cualquier dispositivo) ──
+function escHtml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function notifIcon(t){return t==="nuevo"?"🆕":t==="bloqueado"?"🚫":t==="lleno"?"🔴":t==="cancelacion"?"↩️":"🔔";}
+// addNotif: append ATÓMICO con arrayUnion → no se pisa con otros guardados ni entre dispositivos.
+// Devuelve la promesa: en el registro hay que esperarla ANTES del signOut, o la escritura
+// queda sin sesión y Firestore la rechaza (el aviso de "nuevo alumno" se perdería).
+function addNotif(type,msg){
+  if(!window.db)return Promise.resolve();
+  var now=new Date();
+  var entry={id:Date.now()+Math.floor(Math.random()*1000),type:type,msg:msg,
+    time:now.toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"}),
+    date:now.toLocaleDateString("es-CL",{day:"numeric",month:"short"})};
+  if(!D.notif)D.notif=[];D.notif.push(entry); // optimista local; el snapshot confirma
+  return db.collection("spinning").doc("notif").set(
+    {value:firebase.firestore.FieldValue.arrayUnion(entry)},{merge:true}
+  ).catch(function(e){console.warn("addNotif",e);});
+}
+function notifUnread(){
+  var arr=D.notif||[];return arr.filter(function(n){return (n.id||0)>_notifLastRead;}).length;
+}
+function updateBell(){
+  if(!ISADM)return;
+  var unread=notifUnread();
+  var badge=document.getElementById("bell-badge");if(!badge)return;
+  badge.textContent=unread>9?"9+":String(unread);
+  badge.classList.toggle("hidden",unread===0);
+  var panel=document.getElementById("notif-panel");
+  if(panel&&panel.classList.contains("open"))renderNotifList();
+}
+function renderNotifList(){
+  var arr=(D.notif||[]).slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
+  var list=document.getElementById("notif-list");if(!list)return;
+  if(!arr.length){list.innerHTML="<div class='notif-empty'>Sin notificaciones</div>";return;}
+  var h="";
+  arr.forEach(function(n){
+    var unread=(n.id||0)>_notifLastRead;
+    h+="<div class='notif-item"+(unread?" unread":"")+"'><div class='notif-ic'>"+notifIcon(n.type)+"</div>";
+    h+="<div class='notif-bd'><div class='notif-msg'>"+escHtml(n.msg)+"</div><div class='notif-tm'>"+escHtml(n.date||"")+" · "+escHtml(n.time||"")+"</div></div></div>";
+  });
+  list.innerHTML=h;
+}
+function toggleNotif(){
+  var panel=document.getElementById("notif-panel");if(!panel)return;
+  var opening=!panel.classList.contains("open");
+  panel.classList.toggle("open",opening);
+  if(opening){
+    renderNotifList();
+    // Marcar todo como leído = guardar el id más reciente (NO reescribe el array → no borra avisos).
+    var arr=D.notif||[],maxId=_notifLastRead;
+    arr.forEach(function(n){if((n.id||0)>maxId)maxId=n.id;});
+    if(maxId>_notifLastRead){
+      _notifLastRead=maxId;
+      if(window.db)db.collection("spinning").doc("notif").set({lastReadId:maxId},{merge:true}).catch(function(){});
+      updateBell();
+    }
+  }
+}
+function clearNotifs(){
+  D.notif=[];_notifLastRead=Date.now();
+  if(window.db)db.collection("spinning").doc("notif").set({value:[],lastReadId:_notifLastRead}).catch(function(){});
+  renderNotifList();updateBell();
+}
 
 function toast(msg,t){
   var el=document.getElementById("toast");
@@ -786,7 +1078,7 @@ function switchTab(t){
 function showView(id){
   ["v-login","v-reg","v-rec"].forEach(function(v){document.getElementById(v).classList.toggle("hidden",v!==id);});
 }
-function showAdmRec(){document.getElementById("adm-lv").classList.add("hidden");document.getElementById("adm-rv").classList.remove("hidden");loadAPQ();}
+function showAdmRec(){document.getElementById("adm-lv").classList.add("hidden");document.getElementById("adm-rv").classList.remove("hidden");}
 function backAdmLogin(){document.getElementById("adm-lv").classList.remove("hidden");document.getElementById("adm-rv").classList.add("hidden");}
 
 function showRS(t){
@@ -813,12 +1105,40 @@ function backARec(){
   _apP=false;
 }
 
+// Traduce los códigos de error de Firebase Auth a mensajes en español.
+function authErr(e){
+  var c=e&&e.code?e.code:"";
+  switch(c){
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found": return "Correo o contraseña incorrectos.";
+    case "auth/invalid-email": return "El correo no es válido.";
+    case "auth/email-already-in-use": return "Este correo ya está registrado.";
+    case "auth/weak-password": return "La contraseña es muy débil (mínimo 6 caracteres).";
+    case "auth/too-many-requests": return "Demasiados intentos. Espera unos minutos e intenta de nuevo.";
+    case "auth/network-request-failed": return "Sin conexión. Revisa tu internet.";
+    case "auth/operation-not-allowed": return "El registro está deshabilitado. Activa 'Correo electrónico/contraseña' en Firebase → Authentication → Sign-in method.";
+    case "auth/requires-recent-login": return "Por seguridad, cierra sesión y vuelve a entrar para cambiar la contraseña.";
+    default: return (e&&e.message)?e.message:"Ocurrió un error. Intenta de nuevo.";
+  }
+}
 function doRecEm(){
   var em=document.getElementById("rcem").value.trim().toLowerCase();
   var err=document.getElementById("recerr"),ok=document.getElementById("recok");
   err.style.display="none";ok.style.display="none";
-  if(!D.alum.find(function(a){return a.email===em;})){err.textContent="No existe cuenta con ese correo.";err.style.display="block";return;}
-  ok.textContent="📧 (Demo) Enlace enviado a "+em;ok.style.display="block";
+  if(!em){err.textContent="Ingresa tu correo.";err.style.display="block";return;}
+  if(!window.auth){err.textContent="Autenticación no configurada.";err.style.display="block";return;}
+  var btn=document.getElementById("emSendBtn");if(btn){btn.disabled=true;btn.textContent="Enviando…";}
+  auth.sendPasswordResetEmail(em)
+    .then(function(){
+      ok.textContent="📧 Te enviamos un enlace a "+em+". Ábrelo para crear tu nueva contraseña (revisa también spam).";ok.style.display="block";
+    })
+    .catch(function(e){
+      if(e&&e.code==="auth/user-not-found"){err.textContent="No existe una cuenta con ese correo.";}
+      else{err.textContent=authErr(e);}
+      err.style.display="block";
+    })
+    .finally(function(){if(btn){btn.disabled=false;btn.textContent="📧 Reenviar enlace";}});
 }
 function loadPQ(){
   var em=document.getElementById("rpem").value.trim().toLowerCase();
@@ -883,8 +1203,11 @@ function doAdmRecEm(){
   var em=document.getElementById("arecm").value.trim().toLowerCase();
   var err=document.getElementById("areerr"),ok=document.getElementById("areok");
   err.style.display="none";ok.style.display="none";
-  if(em!==D.adm.email){err.textContent="Correo admin no reconocido.";err.style.display="block";return;}
-  ok.textContent="📧 (Demo) Enlace enviado a "+D.adm.email;ok.style.display="block";
+  if(em!==ADMIN_EMAIL){err.textContent="Correo admin no reconocido.";err.style.display="block";return;}
+  if(!window.auth){err.textContent="Autenticación no configurada.";err.style.display="block";return;}
+  auth.sendPasswordResetEmail(em)
+    .then(function(){ok.textContent="📧 Enlace enviado a "+em+". Ábrelo para crear tu nueva contraseña (revisa también spam).";ok.style.display="block";})
+    .catch(function(e){err.textContent=authErr(e);err.style.display="block";});
 }
 function loadAPQ(){
   var qs=D.adm.preguntas||[];
@@ -921,16 +1244,35 @@ function doLogin(){
   var em=document.getElementById("lem").value.trim().toLowerCase();
   var ps=document.getElementById("lps").value;
   var err=document.getElementById("lerr");err.style.display="none";
-  var al=D.alum.find(function(a){return a.email===em&&a.pass===ps;});
-  if(!al){err.textContent="Correo o contraseña incorrectos.";err.style.display="block";return;}
-  CU=al;ISADM=false;enterApp();
+  if(!window.auth){err.textContent="Autenticación no configurada.";err.style.display="block";return;}
+  if(em===ADMIN_EMAIL){err.textContent="Esta es una cuenta de administrador. Usa la pestaña 🛡️ Administrador.";err.style.display="block";return;}
+  cancelAutoLogin();
+  var btn=document.getElementById("lbtn");if(btn){btn.disabled=true;btn.textContent="Ingresando…";}
+  function _fin(){if(btn){btn.disabled=false;btn.textContent="Ingresar";}}
+  // Los datos se leen recién DESPUÉS de autenticarse (reglas de Firestore), por eso el whenDataReady.
+  authPersist("l-remember").then(function(){return auth.signInWithEmailAndPassword(em,ps);})
+  .then(function(){return whenDataReady();})
+  .then(function(){
+    var al=D.alum.find(function(a){return a.email===em;});
+    if(!al&&_loadFailed){throw new Error("No se pudieron cargar tus datos. Revisa tu conexión e intenta de nuevo.");}
+    if(!al){al={nombre:em.split("@")[0],rut:"",email:em,fechaNac:"",tel:"",preguntas:[]};D.alum.push(al);alumAdd(al);}
+    CU=al;ISADM=false;_fin();enterApp();
+  }).catch(function(e){err.textContent=authErr(e);err.style.display="block";_fin();});
 }
 function doAdmLogin(){
   var em=document.getElementById("aem").value.trim().toLowerCase();
   var ps=document.getElementById("aps").value;
   var err=document.getElementById("aerr");err.style.display="none";
-  if(em===D.adm.email&&ps===D.adm.pass){CU=D.adm;ISADM=true;enterApp();}
-  else{err.textContent="Credenciales incorrectas.";err.style.display="block";}
+  if(!window.auth){err.textContent="Autenticación no configurada.";err.style.display="block";return;}
+  if(em!==ADMIN_EMAIL){err.textContent="Este correo no es de administrador.";err.style.display="block";return;}
+  cancelAutoLogin();
+  var btn=document.getElementById("abtn");if(btn){btn.disabled=true;btn.textContent="Ingresando…";}
+  function _fin(){if(btn){btn.disabled=false;btn.textContent="Acceder como Admin";}}
+  authPersist("a-remember").then(function(){return auth.signInWithEmailAndPassword(em,ps);})
+  .then(function(){return whenDataReady();})   // el panel necesita D.alum ya cargado
+  .then(function(){
+    D.adm.email=em;CU=D.adm;ISADM=true;_fin();enterApp();
+  }).catch(function(e){err.textContent=authErr(e);err.style.display="block";_fin();});
 }
 function doRegister(){
   var nm=document.getElementById("rnm").value.trim();
@@ -941,21 +1283,41 @@ function doRegister(){
   var ps2=document.getElementById("rps2").value;
   var err=document.getElementById("rerr"),ok=document.getElementById("rok");
   err.style.display="none";ok.style.display="none";
+  if(!window.auth){err.textContent="Autenticación no configurada.";err.style.display="block";return;}
   if(!nm||!rt||!em||!ps||!ps2){err.textContent="Completa todos los campos obligatorios.";err.style.display="block";return;}
+  if(!validaRut(rt)){err.textContent="El RUT no es válido. Verifica el número y el dígito verificador.";err.style.display="block";return;}
+  rt=formatRut(rt); // normaliza a 12.345.678-9
   if(!fd){err.textContent="La fecha de nacimiento es obligatoria.";err.style.display="block";return;}
   if(!isPhoneValid("r")){err.textContent="Ingresa un teléfono de 9 dígitos (ej: 912345678).";err.style.display="block";return;}
   if(!vUSM(em)){err.textContent="Solo correos @usm.cl o @sansano.usm.cl.";err.style.display="block";return;}
   if(!vP(ps)){err.textContent="La contraseña no cumple los requisitos.";err.style.display="block";return;}
   if(ps!==ps2){err.textContent="Las contraseñas no coinciden.";err.style.display="block";return;}
-  if(D.alum.find(function(a){return a.email===em;})){err.textContent="Este correo ya está registrado.";err.style.display="block";return;}
-  var tel=getFullPhone("r");D.alum.push({nombre:nm,rut:rt,email:em,pass:ps,fechaNac:fd,tel:tel,preguntas:[]});
-  sv();ok.textContent="✅ Cuenta creada. Ahora puedes iniciar sesión.";ok.style.display="block";
-  ["rnm","rrt","rem","rps","rps2"].forEach(function(id){document.getElementById(id).value="";});
-  var rtelEl=document.getElementById("rtel");if(rtelEl)rtelEl.value="";
-  document.getElementById("rfd").value="";
-  setTimeout(function(){showView("v-login");},2000);
+  // El duplicado ya no se chequea contra D.alum: antes del login no hay datos cargados.
+  // Firebase Auth lo rechaza igual con auth/email-already-in-use → "Este correo ya está registrado."
+  var tel=getFullPhone("r");
+  cancelAutoLogin(); // registrarse deja sesión abierta un instante: que no lo meta a la app
+  var btn=document.getElementById("rbtn");if(btn){btn.disabled=true;btn.textContent="Guardando…";}
+  auth.createUserWithEmailAndPassword(em,ps).then(function(){
+    var nuevo={nombre:nm,rut:rt,email:em,fechaNac:fd,tel:tel,preguntas:[]};
+    D.alum.push(nuevo); // optimista local
+    // Ambas escrituras necesitan la sesión recién creada → se esperan ANTES del signOut de abajo.
+    return Promise.all([
+      alumAdd(nuevo), // espera a que los datos queden GUARDADOS en Firestore antes de avisar
+      addNotif("nuevo","Nuevo alumno: "+nm)
+    ]);
+  }).then(function(){
+    return auth.signOut();
+  }).then(function(){
+    ok.textContent="✅ ¡Registro exitoso! Tus datos quedaron guardados. Ya puedes iniciar sesión con tu correo y contraseña.";ok.style.display="block";
+    ["rnm","rrt","rem","rps","rps2"].forEach(function(id){document.getElementById(id).value="";});
+    var rtelEl=document.getElementById("rtel");if(rtelEl)rtelEl.value="";
+    document.getElementById("rfd").value="";
+    if(btn){btn.disabled=false;btn.textContent="Crear Cuenta";}
+    setTimeout(function(){showView("v-login");},2200);
+  }).catch(function(e){err.textContent=authErr(e);err.style.display="block";if(btn){btn.disabled=false;btn.textContent="Crear Cuenta";}});
 }
 function doLogout(){
+  if(window.auth)auth.signOut();
   CU=null;ISADM=false;
   document.getElementById("splash").style.display="flex";
   document.getElementById("app").style.display="none";
@@ -968,7 +1330,11 @@ function enterApp(){
   document.getElementById("app").style.display="block";
   document.getElementById("h-user").textContent=CU.nombre.split(" ")[0];
   document.getElementById("h-ab").classList.toggle("hidden",!ISADM);
-  var anyS=CL&&CL.some(function(cl){return D.emg&&D.emg[cl.id]===true;});document.getElementById("emgban").style.display=anyS?"block":"none";
+  var _bw=document.getElementById("bell-wrap");
+  if(_bw)_bw.style.display=ISADM?"inline-flex":"none";
+  var _np=document.getElementById("notif-panel");if(_np)_np.classList.remove("open");
+  if(ISADM){updateBell();normalizeEmg();migrateResKeys();}
+  updateEmgBanner();
   if(ISADM)renderAdmin();else renderAlumno();
   if(CU.fechaNac&&isBirthday(CU.fechaNac)){
     setTimeout(function(){showBdayPopup(CU.nombre);},900);
@@ -1033,6 +1399,7 @@ function renderAlumno(){
   h+="<div class='ibox' style='margin-top:13px'>ℹ️ Puedes cancelar hasta 2 horas antes. Sin cancelar y sin asistir = falta automática.</div>";
   document.getElementById("pc").innerHTML=h;
   startTmr();
+  setTimeout(checkEmgPopup,500); // aviso in-app si SU clase reservada fue suspendida
 }
 
 function doReserva(id){
@@ -1040,21 +1407,43 @@ function doReserva(id){
   if(iBl(em)){toast("Estás suspendido","e");return;}
   var c=CL.find(function(x){return x.id===id;});
   if(!isAct(c)){toast("Reservas aún no habilitadas","e");return;}
-  if(D.emg.activa){toast("Clase suspendida","e");return;}
+  if(isClaseSusp(id)){toast("Clase suspendida","e");return;}
   if(cuD(id)<=0){toast("Sin cupos","e");return;}
   if(hasR(em,id)||isE(em,id)){toast("Ya tienes reserva","w");return;}
   cf2("Reservar "+c.dia+" 12:30","Confirmas tu inscripción para el "+c.dia+" 12:30 hrs. Cancela con al menos 2 horas de anticipación si no puedes asistir.",function(){
-    var k=rk(id);if(!D.res[k])D.res[k]=[];
-    D.res[k].push(em);sv();toast("✅ Reserva confirmada para el "+c.dia,"s");renderAlumno();
+    var k=rk(id);
+    resTx(function(res){
+      if(!res[k])res[k]=[];
+      if(res[k].indexOf(em)>=0)return res; // ya inscrito: no duplica
+      var taken=res[k].length+(D.cEsp[id]||0)+((D.esp[id]||[]).length); // cupos especiales son admin-only (estables)
+      if(taken>=MB)return false; // otro alumno tomó el último cupo
+      res[k].push(em);
+      return res;
+    }).then(function(){
+      if(!D.res[k])D.res[k]=[];if(D.res[k].indexOf(em)<0)D.res[k].push(em); // optimista local; el snapshot confirma
+      toast("✅ Reserva confirmada para el "+c.dia,"s");
+      if(cuD(id)<=0){addNotif("lleno","Clase "+c.dia+" "+getClaseDate(c.cD)+" está COMPLETA ("+MB+"/"+MB+" cupos)");}
+      renderAlumno();
+    }).catch(function(e){
+      toast(e&&e.message==="nocupo"?"Sin cupos, alguien reservó antes":"No se pudo reservar, reintenta","e");
+      renderAlumno();
+    });
   });
 }
 function doCancel(id){
   var c=CL.find(function(x){return x.id===id;}),now=new Date();
   if(now.getDay()===c.cD&&now.getHours()+now.getMinutes()/60>=c.cH-2){toast("No puedes cancelar con menos de 2 horas","e");return;}
   cf2("Cancelar reserva","¿Confirmas cancelación para el "+c.dia+" 12:30 hrs?",function(){
-    var k=rk(id);
-    D.res[k]=(D.res[k]||[]).filter(function(e){return e!==CU.email;});
-    sv();toast("Reserva cancelada","w");renderAlumno();
+    var k=rk(id),em=CU.email;
+    resTx(function(res){
+      if(res[k])res[k]=res[k].filter(function(e){return e!==em;});
+      return res;
+    }).then(function(){
+      if(D.res[k])D.res[k]=D.res[k].filter(function(e){return e!==em;}); // optimista local
+      var _alc=D.alum.find(function(a){return a.email===em;});
+      addNotif("cancelacion",(_alc?_alc.nombre:em)+" canceló reserva del "+c.dia+" "+getClaseDate(c.cD));
+      toast("Reserva cancelada","w");renderAlumno();
+    }).catch(function(){toast("No se pudo cancelar, reintenta","e");renderAlumno();});
   });
 }
 
@@ -1165,7 +1554,7 @@ function rAdmF(){
 
 function rAdmE(){
   var h="<div class='pb'><div class='pt'>🚨 Botón de Emergencia — Suspender Clase</div>";
-  h+="<div class='pd'>Selecciona la clase a suspender. Los alumnos inscritos recibirán aviso por correo indicando el día específico.</div>";
+  h+="<div class='pd'>Suspende <strong>solo la fecha indicada</strong>. Al pasar ese día la clase vuelve a estar disponible sola; las semanas siguientes no se ven afectadas. Los alumnos inscritos ven el aviso al abrir la app.</div>";
   CL.forEach(function(c){
     var susp=isClaseSusp(c.id);
     var fC=getClaseDate(c.cD);
@@ -1175,7 +1564,7 @@ function rAdmE(){
     h+="<div style='display:flex;align-items:center;justify-content:space-between;gap:10px'>";
     h+="<div><strong style='font-family:Oswald,sans-serif;font-size:15px;color:#003366'>"+c.dia+" 12:30</strong>";
     h+="<div style='font-size:11px;color:#8a95a3'>"+fC+"</div>";
-    if(susp)h+="<div style='font-size:11px;color:#c62828;font-weight:700;margin-top:3px'>🚨 SUSPENDIDA</div>";
+    if(susp)h+="<div style='font-size:11px;color:#c62828;font-weight:700;margin-top:3px'>🚨 SUSPENDIDA solo esta fecha</div>";
     h+="</div>";
     if(susp){
       h+="<button class='btnunp' style='width:auto;padding:7px 14px;margin:0' data-cid='"+c.id+"' onclick='doDesEmgClase(this.dataset.cid)'>✅ Reactivar</button>";
@@ -1208,7 +1597,9 @@ function markA(cid,em,est){
   var prev=D.asi[asK][em];D.asi[asK][em]=est;
   if(est==="a"&&prev!=="a"){
     D.fal[em]=(D.fal[em]||0)+1;
-    if(D.fal[em]>=MF){var hd=new Date();hd.setDate(hd.getDate()+BD);D.blq[em]={hasta:hd.toISOString()};toast("⚠️ 3 faltas — "+em+" bloqueado","w");}
+    if(D.fal[em]>=MF){var hd=new Date();hd.setDate(hd.getDate()+BD);D.blq[em]={hasta:hd.toISOString()};toast("⚠️ 3 faltas — "+em+" bloqueado","w");
+      var _alb=D.alum.find(function(a){return a.email===em;});
+      addNotif("bloqueado","Alumno bloqueado por 3 faltas: "+(_alb?_alb.nombre:em));}
   } else if(est==="p"&&prev==="a"){
     D.fal[em]=Math.max(0,(D.fal[em]||0)-1);
     if(D.blq[em]&&D.fal[em]<MF)delete D.blq[em];
@@ -1239,7 +1630,10 @@ function doElim(em){
     D.alum=D.alum.filter(function(a){return a.email!==em;});
     Object.keys(D.res).forEach(function(k){D.res[k]=D.res[k].filter(function(e){return e!==em;});});
     Object.keys(D.esp).forEach(function(k){D.esp[k]=D.esp[k].filter(function(e){return e.email!==em;});});
-    delete D.fal[em];delete D.blq[em];sv();toast("Eliminado","w");renderAdmin("alumnos");
+    delete D.fal[em];delete D.blq[em];
+    alumRemove(em);
+    resTx(function(res){Object.keys(res).forEach(function(k){res[k]=res[k].filter(function(e){return e!==em;});});return res;}).catch(function(){});
+    sv();toast("Eliminado","w");renderAdmin("alumnos");
   });
 }
 function doDesbloq(em){delete D.blq[em];sv();toast("Desbloqueado","s");renderAdmin();}
@@ -1249,12 +1643,10 @@ function doDesEmg(){} // legacy
 function doActEmgClase(id){
   var c=CL.find(function(x){return x.id===id;});
   var fC=getClaseDate(c.cD);
-  cf2("🚨 Suspender "+c.dia+" "+fC,"¿Confirmas la suspensión? Los alumnos inscritos recibirán aviso.",function(){
-    D.emg[id]=true; sv();
-    // Show banner if any class suspended
-    var anySupp=CL&&CL.some(function(cl){return D.emg&&D.emg[cl.id]===true;});
-    document.getElementById("emgban").style.display=anySupp?"block":"none";
-    toast("🚨 Clase "+c.dia+" suspendida","e");
+  cf2("🚨 Suspender "+c.dia+" "+fC,"Se suspende SOLO la clase del "+fC+". Las siguientes semanas siguen disponibles con normalidad.",function(){
+    D.emg[id]=claseDateKey(c.cD); sv(); // se guarda la fecha, no un true permanente
+    updateEmgBanner();
+    toast("🚨 Clase del "+fC+" suspendida","e");
     renderAdmin("emg");
   });
 }
@@ -1262,8 +1654,7 @@ function doDesEmgClase(id){
   var c=CL.find(function(x){return x.id===id;});
   cf2("Reactivar "+c.dia,"¿Confirmas que la clase retoma normalmente?",function(){
     D.emg[id]=false; sv();
-    var anySupp=CL&&CL.some(function(cl){return D.emg&&D.emg[cl.id]===true;});
-    document.getElementById("emgban").style.display=anySupp?"block":"none";
+    updateEmgBanner();
     toast("✅ Clase "+c.dia+" reactivada","s");
     renderAdmin("emg");
   });
@@ -1339,7 +1730,7 @@ function openSettings(){
     pregH+="<div class='fg' style='margin-bottom:0'><label>Respuesta "+(i+1)+"</label><input type='text' id='spr"+i+"' value='"+(qs[i]?qs[i].r:"")+"' placeholder='Sin distinción de mayúsculas'/></div></div>";
   }
   var h="<div class='fg'><label>Nombre Completo</label><input type='text' id='snm' value='"+u.nombre+"'/></div>";
-  if(!ISADM)h+="<div class='fg'><label>RUT</label><input type='text' id='srt' value='"+(u.rut||"")+"'/></div>";
+  if(!ISADM)h+="<div class='fg'><label>RUT</label><input type='text' id='srt' value='"+(u.rut||"")+"' placeholder='12.345.678-9' maxlength='12' oninput=\"onRutInput('srt')\"/></div>";
   h+="<div class='fg'><label>Fecha de Nacimiento</label><input type='date' id='sfd' value='"+(u.fechaNac||"")+"'/></div>";
   var telNum=u.tel?u.tel.replace(/^\+56/,"").replace(/\D/g,""):"";
   h+="<div class='fg'><label>Teléfono WhatsApp 🇨🇱 <span style='color:var(--gm);font-weight:400;font-size:10px'>(recuperación de contraseña)</span></label>";
@@ -1370,23 +1761,41 @@ function saveSet(){
   var np=document.getElementById("snp-"+pfx).value;
   var np2=document.getElementById("snp2-"+pfx).value;
   if(nm)u.nombre=nm;
-  if(!ISADM){var rt=document.getElementById("srt").value.trim();if(rt)u.rut=rt;}
+  if(!ISADM){var rt=document.getElementById("srt").value.trim();if(rt){
+    if(validaRut(rt)){u.rut=formatRut(rt);} // válido → normaliza a 12.345.678-9
+    else if(cleanRut(rt)===cleanRut(u.rut||"")){u.rut=rt;} // RUT antiguo sin cambios: no bloquea editar otros datos
+    else{toast("El RUT no es válido. Revisa el número y el dígito verificador.","e");return;}
+  }}
   else{var em2=document.getElementById("sem").value.trim();if(em2)u.email=em2;}
   u.fechaNac=fd;u.tel=tel;
   var qs=[];
   for(var i=0;i<3;i++){var pv=document.getElementById("spq"+i).value,rv=document.getElementById("spr"+i).value.trim();if(rv.length>0)qs.push({p:pv,r:rv});}
   u.preguntas=qs;
+  if(!ISADM){
+    var idx=D.alum.findIndex(function(a){return a.email===CU.email;});if(idx>=0)D.alum[idx]=CU; // refresca copia local
+    alumUpdate(CU.email,{nombre:u.nombre,rut:u.rut,fechaNac:u.fechaNac,tel:u.tel,preguntas:u.preguntas}); // escritura atómica
+  }
+  sv();set("h-user",u.nombre.split(" ")[0]);
   if(np){
-    if(cp!==u.pass){toast("Contraseña actual incorrecta","e");return;}
     if(!vP(np)){toast("Nueva contraseña no cumple requisitos","e");return;}
     if(np!==np2){toast("Las contraseñas no coinciden","e");return;}
-    u.pass=np;
+    if(!cp){toast("Ingresa tu contraseña actual","e");return;}
+    var user=window.auth&&auth.currentUser;
+    if(!user){toast("Sesión expirada. Vuelve a entrar.","e");return;}
+    var cred=firebase.auth.EmailAuthProvider.credential(user.email,cp);
+    user.reauthenticateWithCredential(cred).then(function(){
+      return user.updatePassword(np);
+    }).then(function(){
+      closeSet();toast("✅ Datos y contraseña actualizados","s");
+    }).catch(function(e){
+      toast(authErr(e),"e");
+    });
+    return;
   }
-  if(!ISADM){var idx=D.alum.findIndex(function(a){return a.email===CU.email;});if(idx>=0)D.alum[idx]=CU;}
-  sv();set("h-user",u.nombre.split(" ")[0]);closeSet();toast("✅ Datos actualizados","s");
+  closeSet();toast("✅ Datos actualizados","s");
 }
 
-if(!D.alum.length){
+function seedDemo(){
   D.alum=[
     {nombre:"María González Pérez",rut:"18.234.567-8",email:"maria.gonzalez@sansano.usm.cl",pass:"Spinning1",fechaNac:"2002-03-15",tel:"98765432",preguntas:[{p:PQL[0],r:"luna"},{p:PQL[1],r:"santiago"},{p:PQL[3],r:"pizza"}]},
     {nombre:"Juan Rodríguez Silva",rut:"19.345.678-9",email:"juan.rodriguez@sansano.usm.cl",pass:"Spinning1",fechaNac:"2001-07-22",tel:"91234567",preguntas:[]},
@@ -1401,6 +1810,25 @@ if(!D.alum.length){
   D.fal["juan.rodriguez@sansano.usm.cl"]=2;
   D.fal["camila.soto@sansano.usm.cl"]=1;
   sv();
+  alumTx(function(){return D.alum;}); // alum ya no va en sv(): escribir el sembrado explícitamente
+  resTx(function(){return D.res;}).catch(function(){}); // res tampoco va en sv()
+}
+
+// Arranca la conexión con la nube.
+// Los datos ya NO se leen al cargar la página: las reglas de Firestore exigen sesión iniciada,
+// así que bootData() se dispara cuando hay usuario y se corta al salir.
+if(window.FIREBASE_READY&&window.db){
+  if(window.auth){
+    auth.onAuthStateChanged(function(u){
+      _authUser=u;
+      if(u)bootData();else stopData();
+      if(!_authKnown){_authKnown=true;maybeAutoLogin();}
+    });
+  }else{bootData();}
+}else{
+  window.addEventListener("load",function(){
+    toast("⚠️ Falta configurar Firebase en firebase-config.js","e");
+  });
 }
 
 // Register PWA Service Worker

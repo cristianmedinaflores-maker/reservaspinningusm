@@ -1,7 +1,8 @@
-const CACHE_NAME = "spinning-usm-cache-v4";
+const CACHE_NAME = "spinning-usm-cache-v6";
 const ASSETS = [
   "./",
   "./index.html",
+  "./firebase-config.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
